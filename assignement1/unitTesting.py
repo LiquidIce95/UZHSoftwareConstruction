@@ -110,11 +110,12 @@ class TestCase(ABC):
 
 # use this function to run tests (especially from command line) 
 # argument is the testclass
-def main(pattern='')->None:
+def main(items,pattern='')->None:
 
     selectPattern = None
-    for(name,obj) in globals().items():
-        if 'TestCase' in name:
+    for(name,obj) in items:
+        # execute all classes which implemented the interface but not the interface itself
+        if name != 'TestCase' and inspect.isclass(obj) and issubclass(obj,TestCase):
             Tests = obj()
 
             if len(sys.argv) == 2 and sys.argv[1].startswith("--"):

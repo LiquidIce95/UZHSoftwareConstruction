@@ -8,6 +8,7 @@ class TestSuite1(TestCase):
     def testPattern(self):
         assert(1==1)
 
+
 class TestSuite2(TestCase):
     def test1(self):
         assert(1==2)
@@ -19,4 +20,4 @@ class TestSuite2(TestCase):
 
 if __name__ == "__main__":
     # Use introspection to automatically run all classes int test file
-    print(globals().items())
+    main(globals().items())
