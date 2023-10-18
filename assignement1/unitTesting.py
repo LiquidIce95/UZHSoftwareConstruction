@@ -11,11 +11,11 @@ from functools import partial
 import sys
 
 class TestCase(ABC):
-    # test data in 2d dictionary whre first key is the name of
-    # the function and second values are result and time
-    # these attributes can be changed in the implementation of the tests
-    # ASSUMPTION: order in which setups , teardown and testfunctions should be executed
-    # is alphabetically by name of functions
+    """test data in 2d dictionary whre first key is the name of
+     the function and second values are result and time
+     these attributes can be changed in the implementation of the tests
+     ASSUMPTION: order in which setups , teardown and testfunctions should be executed
+     is alphabetically by name of functions"""
     report = {}
     prefixTests = 'test'
     prefixSetup = 'setup'
@@ -23,11 +23,22 @@ class TestCase(ABC):
     selectPattern = ''    
 
     # predicates used for member introspection
-    def Pred(self,prefix, member):
+    def Pred(self,prefix:str, member)->enumerate:
+        """
+        args:
+            prefix: string the specifies with which prefix the tests start
+        returns the boolean expression needed for inspect.getmembers() 
+        """
         return inspect.ismethod(member) and member.__name__.startswith(f"{prefix}")
 
     # function which is called on each test execution
-    def execute(self,name:str,func):
+    def execute(self,name:str,func)->None:
+        """
+        args: 
+            name: is the name of the test function
+            func: the actual test function
+        
+        """
         # init the dict
         self.report[name] = { 'result': 'undef', 'time': 'undef'}
         # use shorted ref to dict
@@ -61,12 +72,19 @@ class TestCase(ABC):
 
 
     def runtests(self):
+        """
+        runs all tests within a testclass
+        a class which implements TestCase interface
+        """
         # get members of instance of this interface
         Tests = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixTests))
 
         if self.selectPattern != '':
             Tests = [(name, func) for name, func in Tests if self.selectPattern in name]
 
+        # partial returns a new function with self.prefixSetup as the prefix argument
+        # setUps are the setup function sorted in alph. order
+        # tearDs are teardown function sorted in alph. order
         setUps = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixSetup))
         tearDs = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixTearD))
 
@@ -84,6 +102,9 @@ class TestCase(ABC):
     
 
     def analysis(self):
+        """
+        generates a test report and prints it
+        """
         print("\n")
         print("--TEST REPORT--")
         passes = 0
@@ -111,7 +132,12 @@ class TestCase(ABC):
 # use this function to run tests (especially from command line) 
 # argument is the testclass
 def main(items,pattern='')->None:
-
+    """
+    args: globals().items() of your file
+    runs all test classes in your file in alphabetical order
+    runs all setup functions in alph. order then test function then all teardown in alph.order
+    the tests are run in alph. order
+    """
     selectPattern = None
     for(name,obj) in items:
         # execute all classes which implemented the interface but not the interface itself

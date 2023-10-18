@@ -56,15 +56,6 @@ class FileManagerReadFile(TestCase):
 
         assert(expected==result)
 
-    
-
-
-    
-    
-
-
-
-
 
 
 
