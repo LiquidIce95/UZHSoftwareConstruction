@@ -19,5 +19,4 @@ class TestSuite2(TestCase):
 
 
 if __name__ == "__main__":
-    # Use introspection to automatically run all classes int test file
-    main(globals().items())
+    main()

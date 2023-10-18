@@ -23,10 +23,11 @@ class TestCase(ABC):
     selectPattern = ''    
 
     # predicates used for member introspection
-    def Pred(self,prefix:str, member)->enumerate:
+    def Pred(self,prefix:str, member : object)->enumerate:
         """
         args:
             prefix: string the specifies with which prefix the tests start
+            member: object to check 
         returns the boolean expression needed for inspect.getmembers() 
         """
         return inspect.ismethod(member) and member.__name__.startswith(f"{prefix}")
@@ -71,18 +72,20 @@ class TestCase(ABC):
 
 
 
-    def runtests(self):
+    def runtests(self)->None:
         """
         runs all tests within a testclass
         a class which implements TestCase interface
         """
         # get members of instance of this interface
+        # partial returns a new function with self.prefixSetup as the prefix argument
+        # self and member argumetns are inferred from the predicate
+        # tests are in alph.order
         Tests = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixTests))
 
         if self.selectPattern != '':
             Tests = [(name, func) for name, func in Tests if self.selectPattern in name]
 
-        # partial returns a new function with self.prefixSetup as the prefix argument
         # setUps are the setup function sorted in alph. order
         # tearDs are teardown function sorted in alph. order
         setUps = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixSetup))
@@ -101,7 +104,7 @@ class TestCase(ABC):
 
     
 
-    def analysis(self):
+    def analysis(self)->None:
         """
         generates a test report and prints it
         """
@@ -128,16 +131,31 @@ class TestCase(ABC):
 
         print("--END REPORT--")
 
+def findItems()->dict:
+    """
+    returns globals of the current file
+    """
+    frame = inspect.currentframe()
+    try:
+        while frame.f_back:
+            frame = frame.f_back
+        return frame.f_globals.items()
+    finally:
+        del frame
 
 # use this function to run tests (especially from command line) 
 # argument is the testclass
-def main(items,pattern='')->None:
+def main(pattern : str ='')->None:
     """
-    args: globals().items() of your file
+    args: 
+        items: globals().items() of your file
+        pattern: optional, filter tests to be executed by a string which they must contain
     runs all test classes in your file in alphabetical order
     runs all setup functions in alph. order then test function then all teardown in alph.order
     the tests are run in alph. order
     """
+    items = findItems()  
+
     selectPattern = None
     for(name,obj) in items:
         # execute all classes which implemented the interface but not the interface itself
