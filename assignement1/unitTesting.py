@@ -1,5 +1,5 @@
 # is needed for interfaces
-from abc import ABC, abstractmethod
+from abc import ABC
 # is needed for class introspection
 import inspect
 # is needed for time measurement
