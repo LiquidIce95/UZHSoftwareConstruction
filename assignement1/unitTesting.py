@@ -84,7 +84,7 @@ class TestCase(ABC):
         Tests = inspect.getmembers(self,predicate=partial(self.Pred, self.prefixTests))
 
         if self.selectPattern != '':
-            Tests = [(name, func) for name, func in Tests if self.selectPattern in name]
+            Tests = [(name, func) for name, func in Tests if self.selectPattern.lower() in name.lower()]
 
         # setUps are the setup function sorted in alph. order
         # tearDs are teardown function sorted in alph. order
@@ -143,6 +143,18 @@ def findItems()->dict:
     finally:
         del frame
 
+# creates a list from all the elements that are given after the --select command
+# and then runs the tests for all the Keywords
+def patternSelect(Test_obj:TestCase)->None:
+    if sys.argv[1] == "--select":
+        test_pattern = sys.argv[2:]
+        for el in test_pattern:
+            Test_obj.selectPattern = el
+            Test_obj.runtests()
+            Test_obj.analysis()
+    else:
+        raise Warning(f"The command {sys.argv[1]} is not valid. Please use --select")
+
 # use this function to run tests (especially from command line) 
 # argument is the testclass
 def main(pattern : str ='')->None:
@@ -159,14 +171,10 @@ def main(pattern : str ='')->None:
     selectPattern = None
     for(name,obj) in items:
         # execute all classes which implemented the interface but not the interface itself
-        if name != 'TestCase' and inspect.isclass(obj) and issubclass(obj,TestCase):
+        if name != 'TestCase' and inspect.isclass(obj) and issubclass(obj, TestCase):
             Tests = obj()
-
-            if len(sys.argv) == 2 and sys.argv[1].startswith("--"):
-                selectPattern = sys.argv[1][2:]
-                Tests.selectPattern = selectPattern
-                Tests.runtests()
-                Tests.analysis()
+            if len(sys.argv) > 1:
+                patternSelect(Tests)
             
             else:
                 Tests.runtests()
