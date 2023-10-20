@@ -8,20 +8,32 @@ class FileManagerCreateFile(TestCase):
     def teardown(self):
         self.f.close()
         self.f = None    
-        os.remove('test.txt')
-        os.remove('res.txt')
+        try:
+            os.remove('test.txt')
+            os.remove('res.txt')
+        except Exception:
+            pass
 
-    def test1_Name_and_Empty_content(self):
-        file_manager.create_file('res.txt')
+    def test1_NameAndCreation(self):
+        res = file_manager.create_file('res.txt')
 
-        res = open('res.txt')
-        content = res.read()
-        res.close()
+        try:
+            res = open('res.txt')
+            assert(res==True)
 
-        expected = self.f.read()
-        assert(expected==content)
+        except Exception:
+            assert(True==False)
 
-    def test2_fileContent(self):
+    def test2_emptyContent(self):
+        res = file_manager.create_file('res.txt')
+
+        file = open('res.txt')
+        content = file.read()
+
+        assert(content=='')
+
+
+    def test3_nonEmptyfileContent(self):
         teststring = 'blabla\nbla'
 
         file_manager.create_file('res.txt',teststring)
@@ -33,6 +45,11 @@ class FileManagerCreateFile(TestCase):
         self.f.write(teststring)
 
         assert(self.f.read()==contentRes)
+
+    def test4_invalidFileName(self):
+        res = file_manager.create_file('\0<>|')
+
+        assert(res==False)
 
 
 class FileManagerReadFile(TestCase):
