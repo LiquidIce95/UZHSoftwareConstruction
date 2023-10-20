@@ -73,6 +73,17 @@ class FileManagerReadFile(TestCase):
 
         assert(expected==result)
 
+    def test3_NonExistFile(self):
+        try:
+            res = file_manager.read_file('dontExist.txt')
+            assert(res==None)
+        except Exception:
+            assert(True==False)
+
+
+
+
+
 
 
 
