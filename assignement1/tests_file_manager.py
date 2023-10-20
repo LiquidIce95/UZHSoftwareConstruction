@@ -60,4 +60,4 @@ class FileManagerReadFile(TestCase):
 
 
 if __name__ == '__main__':
-    main(globals().items())
+    main()

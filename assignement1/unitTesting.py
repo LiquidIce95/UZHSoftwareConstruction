@@ -16,11 +16,13 @@ class TestCase(ABC):
      these attributes can be changed in the implementation of the tests
      ASSUMPTION: order in which setups , teardown and testfunctions should be executed
      is alphabetically by name of functions"""
-    report = {}
-    prefixTests = 'test'
-    prefixSetup = 'setup'
-    prefixTearD = 'teardown'
-    selectPattern = ''    
+    def __init__(self):
+        self.report = {}
+        self.prefixTests = 'test'
+        self.prefixSetup = 'setup'
+        self.prefixTearD = 'teardown'
+        self.selectPattern = ''    
+
 
     # predicates used for member introspection
     def Pred(self,prefix:str, member : object)->enumerate:
@@ -130,6 +132,9 @@ class TestCase(ABC):
         print(f'total passes {passes} total fails {fails} total errors {errors}')
 
         print("--END REPORT--")
+
+        self.report = {}
+
 
 def findItems()->dict:
     """
