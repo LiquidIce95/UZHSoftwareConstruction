@@ -4,10 +4,10 @@ import file_manager
 
 class FileManagerCreateFile(TestCase):
     def setup(self):
-        self.f = open('test.txt','w+')        
+        self.f = open('test.txt','w+')
     def teardown(self):
         self.f.close()
-        self.f = None    
+        self.f = None
         try:
             os.remove('test.txt')
             os.remove('res.txt')
@@ -22,7 +22,7 @@ class FileManagerCreateFile(TestCase):
             assert(res==True)
 
         except Exception:
-            assert(True==False)
+            assert(res==False)
 
     def test2_emptyContent(self):
         res = file_manager.create_file('res.txt')
@@ -54,10 +54,10 @@ class FileManagerCreateFile(TestCase):
 
 class FileManagerReadFile(TestCase):
     def setup(self):
-        self.f = open('test.txt','w+')        
+        self.f = open('test.txt','w+')
     def teardown(self):
         self.f.close()
-        self.f = None    
+        self.f = None
         os.remove('test.txt')
 
     def test1_ReadEmptyContent(self):
@@ -78,13 +78,57 @@ class FileManagerReadFile(TestCase):
             res = file_manager.read_file('dontExist.txt')
             assert(res==None)
         except Exception:
-            assert(True==False)
+            assert(res==False)
 
+class FileManagerWriteFile(TestCase):
+    def setup(self):
+        self.f = open('test.txt','w+')
+    def teardown(self):
+        self.f.close()
+        self.f = None
+        os.remove('test.txt')
+    def test1_WriteSomeContent(self):
+        text = "Something I want to \ntest!"
+        file_manager.write_file("test.txt", text)
+        expected = self.f.read()
+        assert(expected == text)
+    def test2_WriteNonExistFile(self):
+        text = "Something I want to \ntest!"
+        file_name = "NoSuchFile.txt"
+        status = file_manager.write_file(file_name, text)
+        if os.path.isfile(file_name):
+            status = False
+            os.remove(file_name)
+        assert(status == True)
+    def test3_WriteToExistingText(self):
+        self.f.write("This text was already here...\n")
+        file_manager.write_file("test.txt", "More text to see here")
+        expected = "This text was already here...\nMore text to see here"
+        assert(self.f.read() == expected)
 
-
-
-
-
+class FileManagerDeleteFile(TestCase):
+    def setup(self):
+        self.f = open('test.txt','w+')
+    def teardown(self):
+        self.f.close()
+        self.f = None
+        try:
+            os.remove('test.txt')
+        except FileNotFoundError:
+            pass
+    def test1_DeleteAFile(self):
+        status = file_manager.delete_file("test.txt")
+        if os.path.isfile("test.txt"):
+            status = False
+            os.remove("test.txt")
+        assert(status)
+    def test2_DeleteANonExistingFile(self):
+        try:
+            file_manager.delete_file("NoSuchFile.txt")
+        except FileNotFoundError:
+            assert(True)
+        except Exception:
+            assert(False)
 
 
 if __name__ == '__main__':
