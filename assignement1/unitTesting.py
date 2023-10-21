@@ -25,7 +25,7 @@ class TestCase(ABC):
 
 
     # predicates used for member introspection
-    def Pred(self,prefix:str, member : object)->enumerate:
+    def Pred(self,prefix:str, member : object)->bool:
         """
         args:
             prefix: string the specifies with which prefix the tests start
