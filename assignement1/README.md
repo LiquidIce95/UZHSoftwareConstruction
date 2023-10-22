@@ -52,7 +52,7 @@ When running this file, all Classes which implement 'TestCase' will be run (and 
 
 As you can see you do not need to define setups or teardowns but if you do all functions which start with "setup" will be called in alphabetical order, same for functions wich start with "teardown". This allows you to break up more complex setups and teardown in multiple functions.
 
-a valid testfunction starts with "test". Note that all these prefixed can be overwritten, by implementing a construction in your testclass
+a valid testfunction starts with "test". Note that all these prefixes can be overwritten, by implementing a constructor in your testclass
 
 ```python3   
 from unitTesting import main,TestCase
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 you **must** call the super constructor int this case
 
 
-when you run python3 testfile.py --select Pattern it will only run tests with 'Pattern' in their name, this will be applied to all TestClasses.
+when you run python3 testfile.py --select Pattern it will only run tests with 'Pattern' in their name, this will be applied to all TestClasses. Note that the functions still must start with the self.testprefix string **and** any of your specified patterns
 
 You can even specify multiple patterns :
 python3 testfile.py --select Pattern1 Pattern2 ...
