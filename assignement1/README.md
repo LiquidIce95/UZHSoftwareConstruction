@@ -93,6 +93,9 @@ you **must** call the super constructor int this case
 
 when you run python3 testfile.py --select Pattern it will only run tests with 'Pattern' in their name, this will be applied to all TestClasses.
 
+You can even specify multiple patterns :
+python3 testfile.py --select Pattern1 Pattern2 ...
+
 It is up to the user to use appropriate assertions within the testfunctions, this framework does not provide any built in assertion mechanisms...
 
 Below you find insights about the process this framework came to be.
