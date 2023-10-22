@@ -1,4 +1,108 @@
-**While designing this testing framework we tried to focus on the following things:**
+**How to use this framework**
+
+
+import TestCase, main from unitTesting.py
+
+call main here in your testfile which we refer to as testfile.py.
+
+```python3   
+from unitTesting import main,TestCase
+
+
+
+if __name__ == "__main__":
+    main()
+```
+
+now you can create multiple Test series which consist of multiple tests that share setup and teardown functions. You do this by implementing the TestCase interface.
+
+
+```python3   
+from unitTesting import main,TestCase
+
+class TestSuite1(TestCase):
+    def test1(self):
+        assert(1==2)
+    def test2(self):
+        assert(0==3/0)
+    def testPattern(self):
+        assert(1==1)
+
+
+class TestSuite2(TestCase):
+    def setup(self):
+        pass
+    def teardown(self):
+        pass
+
+    def test1(self):
+        assert(1==2)
+    def test2(self):
+        assert(0==3/0)
+    def testPattern(self):
+        assert(1==1)
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+When running this file, all Classes which implement 'TestCase' will be run (and their testfunctions).
+
+As you can see you do not need to define setups or teardowns but if you do all functions which start with "setup" will be called in alphabetical order, same for functions wich start with "teardown". This allows you to break up more complex setups and teardown in multiple functions.
+
+a valid testfunction starts with "test". Note that all these prefixed can be overwritten, by implementing a construction in your testclass
+
+```python3   
+from unitTesting import main,TestCase
+
+class TestSuite1(TestCase):
+    def test1(self):
+        assert(1==2)
+    def test2(self):
+        assert(0==3/0)
+    def testPattern(self):
+        assert(1==1)
+
+
+class TestSuite2(TestCase):
+    def __init__(self):
+        super().__init__()
+        self.testprefix = 'foo'
+    def setup(self):
+        pass
+    def teardown(self):
+        pass
+
+    def foo1(self):
+        assert(1==2)
+    def foo2(self):
+        assert(0==3/0)
+    def fooPattern(self):
+        assert(1==1)
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+you **must** call the super constructor int this case
+
+
+when you run python3 testfile.py --select Pattern it will only run tests with 'Pattern' in their name, this will be applied to all TestClasses.
+
+It is up to the user to use appropriate assertions within the testfunctions, this framework does not provide any built in assertion mechanisms...
+
+Below you find insights about the process this framework came to be.
+
+
+
+
+**Design insights:**
+
+The goal was to create a minimum viable version of the well-known unittesting framework for python in the context of a software design course. we focused on the following points.
 
     - Simplicity: It should be straightforward to understand and use. Minimizing the effort to test.
     - Flexibility: It should be adaptable to different use-cases without imposing unnecessary complexity.
