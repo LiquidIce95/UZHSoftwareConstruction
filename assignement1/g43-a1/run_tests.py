@@ -148,7 +148,7 @@ def findItems()->dict:
     try:
         while frame.f_back:
             frame = frame.f_back
-        return frame.f_globals.items()
+        return frame.f_globals.copy().items()
     finally:
         del frame
 
@@ -175,7 +175,7 @@ def main(pattern : str ='')->None:
     runs all setup functions in alph. order then test function then all teardown in alph.order
     the tests are run in alph. order
     """
-    items = findItems()  
+    items = findItems()
 
     for(name,obj) in items:
         # execute all classes which implemented the interface but not the interface itself
