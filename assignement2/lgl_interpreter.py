@@ -2,18 +2,12 @@ import sys
 import json
 
 def do_klasse(envs, args):
-    print("DO_KLASSE")
-    print(args)
-    print(len(args))
     assert len(args) == 2
     variables = args[0]  # list of variable names
     methods = args[1]    # list of method definitions
     return ["klasse", variables, methods]
 
 def do_machen(envs, args):
-    print("DO_MACHEN")
-    print(args)
-    # print(len(args))
     assert len(args) == 2
     class_name = args[0]
     instance_values = args[1]  # Assumes instance_values is a list of actual values for the class variables
@@ -32,7 +26,6 @@ def do_machen(envs, args):
 
     # Create the instance method structure
     # Note: We create a shallow copy of each method definition to avoid mutating the class definition
-    print(class_methods)
     instance_methods = {method[1]: method[2] for method in class_methods}
 
     # Construct the instance structure
@@ -41,7 +34,6 @@ def do_machen(envs, args):
     return instance_structure
 
 def do_ausführen(envs, args):
-    print("DO_AUSFÜHREN")
     # Flatten args if nested, assuming that args[0] is a list if len(args) == 1
     args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
     assert len(args) >= 2, "ausführen requires 2 or more arguments"
@@ -89,19 +81,12 @@ def do_ausführen(envs, args):
     return result
 
 def do_funktion(envs,args):
-    print("DO_FUNKTION: \n")
-    print(args)
     assert len(args) == 2
     params = args[0]
     body = args[1]
     return ["funktion",params,body]
 
 def do_aufrufen(envs,args):
-    print("DO_AUFRUFEN: \n")
-    print("AUFRUFEN: envs: ", envs)
-    print("AUFRUFEN: args: ", args)
-
-    print("\n\n")
     name = args[0]
     arguments = args[1:]
     # eager evaluation
@@ -122,7 +107,6 @@ def do_aufrufen(envs,args):
     return result
 
 def envs_get(envs, name):
-    print("ENV_GET: \n")
     assert isinstance(name, str)
     for e in reversed(envs):
         if name in e:
@@ -130,12 +114,10 @@ def envs_get(envs, name):
     assert False, f"Unknown variable or method name {name}"
 
 def envs_set(envs,name,value):
-    print("ENV_SET: \n")
     assert isinstance(name,str)
     envs[-1][name] = value
         
 def do_setzen(envs,args):
-    print("DO_SETZTEN")
     assert len(args) == 2
     assert isinstance(args[0],str)
     var_name = args[0]
@@ -144,12 +126,10 @@ def do_setzen(envs,args):
     return value
 
 def do_abrufen(envs,args):
-    print("DO_ABRUFEN")
     assert len(args) == 1
     return envs_get(envs,args[0])
 
 def do_addieren(envs,args):
-    print("DO_ADDIEREN")
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
@@ -167,7 +147,6 @@ def do_subtrahieren(envs,args):
     return left - right
 
 def do_abfolge(envs,args):
-    print("DO_ABFOLGE: \n")
     assert len(args) > 0
     for operation in args:
         result = do(envs,operation)
@@ -181,7 +160,6 @@ OPERATIONS = {
 }
 
 def do(envs,expr):
-    print("DO: \n")
     if isinstance(expr,int):
         return expr
 
@@ -199,9 +177,6 @@ def main():
     assert isinstance(program,list)
     envs = [{}]
     result = do(envs,program)
-    print("Envs: \n")
-    print(envs)
-    print("\n")
     print(f"=> {result}")
 
 if __name__ == "__main__":
