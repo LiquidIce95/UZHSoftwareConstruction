@@ -146,6 +146,59 @@ def do_subtrahieren(envs,args):
     right = do(envs,args[1])
     return left - right
 
+def do_multiplizieren(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    return left*right
+
+def do_dividieren(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    return left / right
+
+def do_potenzieren(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    return left**right
+
+def do_kleinergl(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    assert isinstance(left,int,float) and isinstance(right,int,float)
+    return int(left <= right)
+
+def do_kleiner(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    assert isinstance(left,int) and isinstance(right,int)
+    return int(left < right)
+
+def do_gleich(envs,args):
+    assert len(args) == 2
+    left = do(envs,args[0])
+    right = do(envs,args[1])
+    return int(left == right)
+
+
+def do_drucken(envs,args):
+    assert len(args)==1
+    res = do(envs,args[0])
+    print(f"=> {res}")
+
+def do_solange(envs,args):
+    assert len(args) == 2
+    
+    while(do(envs,args[0])):
+        do(envs,args[1])
+
+
+
+
 def do_abfolge(envs,args):
     assert len(args) > 0
     for operation in args:
