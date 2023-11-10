@@ -196,6 +196,78 @@ def do_solange(envs,args):
     while(do(envs,args[0])):
         do(envs,args[1])
 
+def do_liste(envs,args):
+    liste = []
+    for arg in args[1:]:
+        liste.append(do(envs,arg))
+
+    envs_set(envs,args[0], liste)
+    return liste
+
+def do_schauen(envs,args):
+    assert len(args) == 2
+    liste = do(envs,args[0])
+    index = do(envs,args[1])
+    assert isinstance(liste,list)
+    assert isinstance(index,int)
+    assert 0 <= index and index < len(liste)
+
+    return liste[index]
+
+def do_lsetzen(envs,args):
+    assert len(args) == 3
+    liste = do(envs,args[0])
+    index = do(envs,args[1])
+    value = do(envs,args[2])
+    assert isinstance(liste,list)
+    assert isinstance(index,int)
+    assert 0 <= index and index < len(liste)
+
+    liste[index] = value
+    return value
+
+def do_Wbuch(envs,args):
+    dict = {}
+    for arg in args[1:]:
+        assert len(arg)==2
+        dict[do(envs,arg[0])]=do(envs,arg[1])
+
+    envs_set(envs,args[0], dict)
+    return dict
+
+def do_Wschauen(envs,args):
+    assert len(args)==2
+    dic = do(envs,args[0])
+    key = do(envs,args[1])
+
+    assert isinstance(dic,dict)
+    assert key in dic
+
+    return dic[key]
+
+def do_Wsetzen(envs,args):
+    assert len(args) == 3
+    dic = do(envs,args[0])
+    assert isinstance(dic,dict)
+
+    key = do(envs,args[1])
+
+    value = do(envs,args[2])
+    dic[key] = value
+    return value
+
+def do_mischen(envs,args):
+    assert len(args) == 3
+    dic1 = do(envs,args[1])
+    dic2 = do(envs,args[2])
+
+    assert isinstance(dic1,dict)
+    assert isinstance(dic2,dict)
+
+    dic3 = dic1 | dic2
+
+    envs_set(envs,args[0], dic3)
+    return dic3
 
 
 

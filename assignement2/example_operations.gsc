@@ -9,5 +9,17 @@
         ["setzen","bedingung", ["addieren",["abrufen","bedingung"],1]],
         ["drucken",["abrufen","bedingung"]]
     ]
-]
+],
+["liste","zettel",["setzen","dachs",9],["addieren",3,4]],
+["schauen",["abrufen","zettel"],1],
+["drucken",["abrufen","zettel"]],
+["lsetzen",["abrufen","zettel"],1,22],
+["drucken",["abrufen","zettel"]],
+["Wbuch","zettel2",[["abrufen","bedingung"],3],[["setzen","foo",3],11]],
+["drucken",["abrufen","zettel2"]],
+["drucken",["Wschauen",["abrufen","zettel2"],["abrufen","bedingung"]]],
+["Wsetzen",["abrufen","zettel2"],["abrufen","bedingung"],44],
+["Wbuch","buch",[3,3],[5,4],[10,200]],
+["mischen","neuesBuch",["abrufen","buch"],["abrufen","zettel2"]],
+["drucken",["abrufen","neuesBuch"]]
 ]
