@@ -1,83 +1,148 @@
 import sys
 import json
+import datetime
+import random
+import argparse
 
+# - # - # - # - #
+# Tracing functions
+log = []
+def time_stamp():
+    return datetime.datetime.now()
+
+def get_ID():
+    ID = ""
+    for i in range(0, 6):
+        ID += str(random.randint(0, 9))
+    return ID
+
+def log_function(func):
+    ID = get_ID()
+    def _inner(envs, args):
+        log.append(f"{ID}, {func.__name__}, start, {time_stamp()}")
+        res = func(envs, args)
+        log.append(f"{ID}, {func.__name__}, stop, {time_stamp()}")
+        return res
+    return _inner
+
+def push(l: list, file: str):
+    with open(file, "w") as f:
+        f.write("id, function_name, event, timestamp\n")
+        f.write("\n".join(l))
+    f.close()
+
+
+def apply_decorators():
+    for name in list(globals()):
+        if callable(globals()[name]) and name.startswith('do_'): #and name.startswith('do_'):
+            globals()[name] = log_function(globals()[name])
+
+# - # - # - # - #
 def do_klasse(envs, args):
-    assert len(args) == 2
-    variables = args[0]  # list of variable names
-    methods = args[1]    # list of method definitions
-    return ["klasse", variables, methods]
+    print("DO_KLASSE")
+    print(args)
+    print(len(args))
+    assert len(args) >= 2
+    if len(args) == 2:
+        variables = args[0]  # list of variable names
+        methods = args[1]    # list of method definitions
+        return ["klasse", None ,variables, methods]
+    elif len(args) == 3:
+        parent = args[0]
+        variables = args[1]  # list of variable names
+        methods = args[2]    # list of method definitions
+        return ["klasse", parent ,variables, methods] 
+    
+    assert False, "Wrong Format for a Klasse"
 
 def do_machen(envs, args):
+    # This function now takes a variable 'total_vars_needed' to keep track of the number of variables needed.
     assert len(args) == 2
-    class_name = args[0]
-    instance_values = args[1]  # Assumes instance_values is a list of actual values for the class variables
+    class_name, instance_values = args
 
-    # Get the class structure from the environment
+    # Retrieve the class structure from the environment.
     klass = envs_get(envs, class_name)
     assert isinstance(klass, list) and klass[0] == "klasse"
-    class_variables = klass[1]
-    class_methods = klass[2]
 
-    # Check if the number of instance values matches the number of class variables
-    assert len(class_variables) == len(instance_values), "Class instantiation requires matching number of values for variables."
+    # Recursively gather class information from ancestors.
+    all_variables, all_methods = helper_gather_class_info(envs, class_name)
 
-    # Create the instance variable structure
-    instance_vars = dict(zip(class_variables, instance_values))
+    # Check if the number of instance values matches the total number of class variables.
+    assert len(all_variables) == len(instance_values), \
+        "Class instantiation requires matching number of values for variables."
 
-    # Create the instance method structure
-    # Note: We create a shallow copy of each method definition to avoid mutating the class definition
-    instance_methods = {method[1]: method[2] for method in class_methods}
+    # Create the instance variable structure.
+    instance_vars = dict(zip(all_variables, instance_values))
 
-    # Construct the instance structure
+    # Create the instance method structure, making sure to copy methods to avoid mutation.
+    instance_methods = {method_name: method for method_name, method in all_methods.items()}
+
+    # Construct the instance structure.
     instance_structure = ["instanz", class_name, instance_vars, instance_methods]
-
+    
     return instance_structure
+
+def helper_gather_class_info(envs, class_name):
+
+    klass = envs_get(envs, class_name)
+    if not klass:  # If class not found, raise an error or return a default value.
+        raise ValueError(f"Class {class_name} not found in the environment.")
+
+    _, class_parent, class_variables, class_methods = klass
+
+    # Initialize variables and methods with the current class's definitions.
+    all_variables = class_variables.copy()
+    all_methods = {method[1]: method[2] for method in class_methods}
+
+    # Recursively add parent class variables and methods.
+    if class_parent is not None:
+        parent_variables, parent_methods = helper_gather_class_info(envs, class_parent)
+        all_variables = parent_variables + all_variables  # Parent vars come first.
+        all_methods.update(parent_methods)  # Parent methods are updated (or added if new).
+
+    return all_variables, all_methods
 
 def do_ausführen(envs, args):
     # Flatten args if nested, assuming that args[0] is a list if len(args) == 1
     args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
-    assert len(args) >= 2, "ausführen requires 2 or more arguments"
+    assert len(args) >= 2, "ausführen requires at least an instance name and a method name"
+    
     instance_name, method_name = args[:2]
-    method_args_provided = args[2:]  # Get provided args as a list, which can be empty
+    method_args_provided = args[2:]  # Any additional args provided to the method call
 
-    # Get the instance from the environment
+    # Retrieve the instance from envs
     instance = envs_get(envs, instance_name)
     assert isinstance(instance, list) and instance[0] == "instanz", "First argument must be an instance name"
     _, class_name, instance_vars, instance_methods = instance
-
-    # Get the method from the instance methods
+    
+    # Retrieve the method to be called
     method = instance_methods.get(method_name)
-    assert method and isinstance(method, list) and method[0] == "funktion", f"{method_name} is not a method of {class_name}"
+    assert method and isinstance(method, list) and method[0] == "funktion", f"{method_name} is not a method of {instance_name}"
 
-    # Prepare the final arguments dictionary for the function
-    final_args = {}
-    provided_args_index = 0  # Keep track of which provided argument to use next
+    # Verify the method's required variables against instance variables and provided args
+    required_vars = method[1]
+    final_args = [method_name]  # Start the call_me_baby list with the method name
 
-    # Iterate over the function's parameters and determine the source of each value
-    for param in method[1]:  # method[1] contains the parameter names of the function
-        if param in instance_vars:
-            # The parameter matches an instance variable, use its value
-            final_args[param] = instance_vars[param]
-        elif provided_args_index < len(method_args_provided):
-            # Use the next provided argument for this parameter
-            final_args[param] = method_args_provided[provided_args_index]
-            provided_args_index += 1
+    for var in required_vars:
+        if var in instance_vars:
+            final_args.append(instance_vars[var])
+        elif method_args_provided:
+            final_args.append(method_args_provided.pop(0))
         else:
-            # Not enough arguments provided
-            raise AssertionError(f"Not enough arguments provided for method {method_name}")
-
-    # Verify that all provided arguments have been used
-    if provided_args_index != len(method_args_provided):
-        raise AssertionError(f"Too many arguments provided for method {method_name}")
+            raise AssertionError(f"Instance {instance_name} does not have the variable {var} and it was not provided as an argument")
+    
+    # Check if there are leftover provided args that were not required
+    if method_args_provided:
+        raise AssertionError(f"Too many arguments provided: {method_args_provided}")
 
     # Create a new environment for the method call, including the instance variables as a dictionary
     envs_for_call = dict(instance_vars)  # dict() is used to ensure a copy of instance variables is passed
-    
-    list_with_abrufen = [item for pair in zip(["abrufen"]*len(envs_for_call), envs_for_call.keys()) for item in pair]
+    args_for_func = [key for key in envs_for_call.values()] # old line if stuff goes south: list_with_abrufen = [item for pair in zip(["abrufen"]*len(envs_for_call), envs_for_call.keys()) for item in pair]
     envs_for_call[method_name] = instance_methods[method_name]
     envs.append(envs_for_call)
-    result = do_aufrufen(envs, [method_name] + [list_with_abrufen])
+    result = do_aufrufen(envs, final_args)
     envs.pop()
+
     return result
 
 def do_funktion(envs,args):
@@ -278,12 +343,6 @@ def do_abfolge(envs,args):
     return result
 
 
-OPERATIONS = {
-    func_name.replace("do_",""): func_body
-    for (func_name, func_body) in globals().items()
-    if func_name.startswith("do_")
-}
-
 def do(envs,expr):
     if isinstance(expr,int):
         return expr
@@ -296,13 +355,52 @@ def do(envs,expr):
     return res
 
 def main():
-    assert len(sys.argv) == 2, "Usage: funcs-demo.py filename.gsc"
+    assert len(sys.argv) >= 2, "Usage: funcs-demo.py filename.gsc"
     with open(sys.argv[1], "r") as source_file:
         program = json.load(source_file)
-    assert isinstance(program,list)
+    assert isinstance(program, list)
+
+    # Variables for Tracing
+    tracing = False
+    # Tracing on/off
+    for i, el in enumerate(sys.argv):
+        if el == "--trace":
+            tracing = True
+            file = sys.argv[i + 1]
+
+    print(globals()["do_setzen"])
+    print(globals()["log_function"])
+    # Output vo dem isch:
+    # <function do_setzen at 0x1037a1080>
+    # <function log_function at 0x102fe34c0>
+
+
+    if tracing:
+        for key, val in globals().items():
+            if key.startswith("do_"):
+                globals()[key] = log_function(val)
+
+    print(globals()["do_setzen"])
+    print(globals()["log_function"])
+    # Output vo dem isch:
+    # <function log_function.<locals>._inner at 0x1037a1940> --> demfall hets die änderig nur lokal überno? Wie mach ichs demfall global?
+    # <function log_function at 0x102fe34c0>
+
     envs = [{}]
-    result = do(envs,program)
+    result = do(envs, program)
     print(f"=> {result}")
+
+    if tracing:
+        push(log, file)
+
+
+OPERATIONS = {
+    func_name.replace("do_",""): func_body
+    for (func_name, func_body) in globals().items()
+    if func_name.startswith("do_")
+}
+
+apply_decorators()
 
 if __name__ == "__main__":
     main()# a python file implementing the interpreter of the LGL 2 language, as described# in the 3 exercises below;
