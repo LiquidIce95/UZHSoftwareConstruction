@@ -38,6 +38,7 @@ def apply_decorators():
             globals()[name] = log_function(globals()[name])
 
 # - # - # - # - #
+
 def do_klasse(envs, args):
     print("DO_KLASSE")
     print(args)
@@ -56,6 +57,8 @@ def do_klasse(envs, args):
     assert False, "Wrong Format for a Klasse"
 
 def do_machen(envs, args):
+    print("DO_MACHEN")
+    print(args)
     # This function now takes a variable 'total_vars_needed' to keep track of the number of variables needed.
     assert len(args) == 2
     class_name, instance_values = args
@@ -103,6 +106,9 @@ def helper_gather_class_info(envs, class_name):
     return all_variables, all_methods
 
 def do_ausführen(envs, args):
+    print("DO_AUSFÜHREN")
+    print(args)
+    
     # Flatten args if nested, assuming that args[0] is a list if len(args) == 1
     args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
     assert len(args) >= 2, "ausführen requires at least an instance name and a method name"
@@ -135,23 +141,39 @@ def do_ausführen(envs, args):
     if method_args_provided:
         raise AssertionError(f"Too many arguments provided: {method_args_provided}")
 
+    # Now, final_args should be ready for the method call
+    print(final_args)
+    # Assuming do_aufrufen(envs, final_args) is implemented to handle the method call.
+    
+    
+
     # Create a new environment for the method call, including the instance variables as a dictionary
     envs_for_call = dict(instance_vars)  # dict() is used to ensure a copy of instance variables is passed
     args_for_func = [key for key in envs_for_call.values()] # old line if stuff goes south: list_with_abrufen = [item for pair in zip(["abrufen"]*len(envs_for_call), envs_for_call.keys()) for item in pair]
     envs_for_call[method_name] = instance_methods[method_name]
     envs.append(envs_for_call)
+    for items in envs:
+        print(items)
+        print("*text")
     result = do_aufrufen(envs, final_args)
     envs.pop()
 
     return result
 
 def do_funktion(envs,args):
+    print("DO_FUNKTION: \n")
+    print(args)
     assert len(args) == 2
     params = args[0]
     body = args[1]
     return ["funktion",params,body]
 
 def do_aufrufen(envs,args):
+    print("DO_AUFRUFEN: \n")
+    print("AUFRUFEN: envs: ", envs)
+    print("AUFRUFEN: args: ", args)
+
+    print("\n\n")
     name = args[0]
     arguments = args[1:]
     # eager evaluation
@@ -172,6 +194,7 @@ def do_aufrufen(envs,args):
     return result
 
 def envs_get(envs, name):
+    print("ENV_GET: \n")
     assert isinstance(name, str)
     for e in reversed(envs):
         if name in e:
@@ -179,10 +202,12 @@ def envs_get(envs, name):
     assert False, f"Unknown variable or method name {name}"
 
 def envs_set(envs,name,value):
+    print("ENV_SET: \n")
     assert isinstance(name,str)
     envs[-1][name] = value
         
 def do_setzen(envs,args):
+    print("DO_SETZTEN")
     assert len(args) == 2
     assert isinstance(args[0],str)
     var_name = args[0]
@@ -191,19 +216,16 @@ def do_setzen(envs,args):
     return value
 
 def do_abrufen(envs,args):
+    print("DO_ABRUFEN")
     assert len(args) == 1
     return envs_get(envs,args[0])
 
 def do_addieren(envs,args):
+    print("DO_ADDIEREN")
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
     return left + right
-
-def do_absolutwert(envs,args):
-    assert len(args) == 1
-    value = do(envs,args[0])
-    return abs(value)
 
 def do_subtrahieren(envs,args):
     assert len(args) == 2
@@ -334,17 +356,17 @@ def do_mischen(envs,args):
     envs_set(envs,args[0], dic3)
     return dic3
 
-
-
 def do_abfolge(envs,args):
+    print("DO_ABFOLGE: \n")
     assert len(args) > 0
     for operation in args:
         result = do(envs,operation)
     return result
 
-
 def do(envs,expr):
-    if isinstance(expr,int):
+    print("DO: \n")
+    print(expr)
+    if isinstance(expr,int) or isinstance(expr, float):
         return expr
 
     #print(expr[0])
@@ -393,6 +415,7 @@ def main():
     if tracing:
         push(log, file)
 
+apply_decorators()
 
 OPERATIONS = {
     func_name.replace("do_",""): func_body
@@ -400,7 +423,6 @@ OPERATIONS = {
     if func_name.startswith("do_")
 }
 
-apply_decorators()
 
 if __name__ == "__main__":
     main()# a python file implementing the interpreter of the LGL 2 language, as described# in the 3 exercises below;
