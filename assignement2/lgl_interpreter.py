@@ -100,25 +100,46 @@ def helper_gather_class_info(envs, class_name):
     return all_variables, all_methods
 
 def do_ausführen(envs, args):
-    # Flatten args if nested, assuming that args[0] is a list if len(args) == 1
-    args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
-    assert len(args) >= 2, "ausführen requires at least an instance name and a method name"
     
-    instance_name, method_name = args[:2]
-    method_args_provided = args[2:]  # Any additional args provided to the method call
+    """
+    class MyClass:
+        # This is a method of the class
+        def my_method(self):
+            print("Hello from my method!")
 
-    # Retrieve the instance from envs
+    # Creating an instance of MyClass
+    my_instance = MyClass()
+    
+    # Calling my_method from my_instance
+    my_instance.my_method()
+
+    This way of calling a function is what do_ausführen replicates.
+    """
+    
+    #flattenargs if nested, assuming that args[0] is a list if len(args) == 1
+    args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
+    #args could also include aarguments for functions that do require more than just self variables.
+    assert len(args) >= 2, "ausführen requires at least an instance name and a method name"
+
+    #gathring info fram arguemnt
+    instance_name, method_name = args[:2]
+    #any additional args provided to the method call
+    method_args_provided = args[2:] 
+
+    #getting the instance the function is a part of
     instance = envs_get(envs, instance_name)
-    assert isinstance(instance, list) and instance[0] == "instanz", "First argument must be an instance name"
+    assert isinstance(instance, list) and instance[0] == "instanz", "Not an instance of a class"
+
+    #collecting the information form the instance needed to do the funciton call
     _, class_name, instance_vars, instance_methods = instance
     
-    # Retrieve the method to be called
+    #retriev the called method and check if it is a valid method
     method = instance_methods.get(method_name)
     assert method and isinstance(method, list) and method[0] == "funktion", f"{method_name} is not a method of {instance_name}"
 
     # Verify the method's required variables against instance variables and provided args
     required_vars = method[1]
-    final_args = [method_name]  # Start the call_me_baby list with the method name
+    final_args = [method_name]
 
     for var in required_vars:
         if var in instance_vars:
