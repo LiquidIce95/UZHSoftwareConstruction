@@ -7,14 +7,16 @@ import argparse
 # - # - # - # - #
 # Tracing functions
 log = []
+IDs = []
 def time_stamp():
     return datetime.datetime.now()
 
 def get_ID():
-    ID = ""
-    for i in range(0, 6):
-        ID += str(random.randint(0, 9))
-    return ID
+    while True:
+        ID = "".join(str(random.randint(0, 9)) for _ in range(6))
+        if ID not in IDs:
+            IDs.append(ID)
+            return ID
 
 def log_function(func):
     ID = get_ID()
@@ -516,7 +518,6 @@ end Task 1, additional functionality
 '''
 
 def do_abfolge(envs,args):
-    print("DO_ABFOLGE: \n")
     assert len(args) > 0
     for operation in args:
         result = do(envs,operation)

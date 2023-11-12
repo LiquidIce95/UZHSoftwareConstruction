@@ -1,8 +1,5 @@
 import sys
 
-title_line = "| Function Name  | Num. of calls  | Total Time (ms) | Average Time (ms) |"
-spacer = "|-----------------------------------------------------------------------|"
-
 def get_report(name: str):
     with open(name, "r") as f:
         report = f.read()
@@ -19,7 +16,7 @@ def str_format(fname: str, calls: int, tot: int, av: int):
     t = round(tot/1000000, 3)
     a = round(av/1000000, 3)
     # 14, 14, 15, 16
-    return f"|   {fname}{space(12, len(fname))} |       {str(calls)}{space(8, len(str(calls)))} |      {str(t)}{space(10, len(str(t)))} |      {str(a)}{space(12, len(str(a)))} |"
+    return f"| {fname}{space(20, len(fname))} |       {str(calls)}{space(8, len(str(calls)))} |      {str(t)}{space(10, len(str(t)))} |      {str(a)}{space(12, len(str(a)))} |"
 
 def format_report(rep: str):
     # remove first line
@@ -36,6 +33,8 @@ def format_report(rep: str):
     for k, v in d.items():
         out.append(str_format(k, int(v[0]), int(v[1]), int(int(v[1])/int(v[0]))))
     p = "\n".join(out)
+    title_line = f"| Function Name{space(20, len('Function Name'))} | Num. of calls  | Total Time (ms) | Average Time (ms) |"
+    spacer = "|-----------------------------------------------------------------------------|"
     return f"{title_line}\n{spacer}\n{p}"
 
 def main():
