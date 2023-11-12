@@ -21,5 +21,10 @@
 ["Wsetzen",["abrufen","zettel2"],["abrufen","bedingung"],44],
 ["Wbuch","buch",[3,3],[5,4],[10,200]],
 ["mischen","neuesBuch",["abrufen","buch"],["abrufen","zettel2"]],
-["drucken",["abrufen","neuesBuch"]]
+["drucken",["abrufen","neuesBuch"]],
+["und",1,0],
+["oder",22,0],
+["istdrin",["abrufen","neuesBuch"],5],
+["istdrin",["abrufen","zettel"],9],
+["wennDann",["gleich",2,2],["drucken",3]]
 ]

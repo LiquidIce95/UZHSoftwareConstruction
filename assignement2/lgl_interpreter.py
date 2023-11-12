@@ -224,25 +224,50 @@ def do_subtrahieren(envs,args):
     right = do(envs,args[1])
     return left - right
 
+'''
+start Task 1, additional functionality
+'''
+
 def do_multiplizieren(envs,args):
+    '''
+        args[0] : left number of multiplication
+        args[1] : right number
+        returns : left times right
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
     return left*right
 
+
 def do_dividieren(envs,args):
+    '''
+        args[0] : numerator
+        args[1] : denumerator
+        returns : numerator / denumerator
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
     return left / right
 
 def do_potenzieren(envs,args):
+    '''
+        args[0] : basis of power
+        args[1] : exponent
+        returns : basis^exponent
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
     return left**right
 
 def do_kleinergl(envs,args):
+    '''
+        args[0] : a
+        args[1] : b
+        returns : int(a < b or a == b)
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
@@ -250,6 +275,11 @@ def do_kleinergl(envs,args):
     return int(left <= right)
 
 def do_kleiner(envs,args):
+    '''
+        args[0] : a
+        args[0] : b
+        returns : int(a < b)
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
@@ -257,24 +287,71 @@ def do_kleiner(envs,args):
     return int(left < right)
 
 def do_gleich(envs,args):
+    '''
+        args[0] : a
+        args[1] : b
+        returns : int(a==b)
+    '''
     assert len(args) == 2
     left = do(envs,args[0])
     right = do(envs,args[1])
     return int(left == right)
 
+def do_und(envs,args):
+    '''
+        args[0] : a
+        args[1] : b
+        returns : int(bool(a) and bool(b))
+    '''
+    assert len(args) == 2
+    left = bool(do(envs,args[0]))
+    right = bool(do(envs,args[1]))
+    return int(left and right)
+
+def do_oder(envs,args):
+    '''
+        args[0] : a
+        args[1] : b
+        returns : int(bool(a) or bool(b))
+    '''
+    assert len(args) == 2
+    left = bool(do(envs,args[0]))
+    right = bool(do(envs,args[1]))
+    return int(left or right)
+
 
 def do_drucken(envs,args):
+    '''
+        args[0] : value to be printed
+        yields : print of value onto console
+    '''
     assert len(args)==1
     res = do(envs,args[0])
     print(f"=> {res}")
 
 def do_solange(envs,args):
+    '''
+        args[0] : condition to be checked on each
+        iteratoin
+        args[1] : commands to be executed on each iteration
+        as long as condition is true
+        returns : the conditions in the final state
+    '''
     assert len(args) == 2
     
     while(do(envs,args[0])):
         do(envs,args[1])
 
+    return do(envs,args[0])
+
+
 def do_liste(envs,args):
+    '''
+        args[0] : name of list
+        args[1:]: values to be store in list
+        returns : the list with all values
+    '''
+    assert len(args) > 0
     liste = []
     for arg in args[1:]:
         liste.append(do(envs,arg))
@@ -282,7 +359,13 @@ def do_liste(envs,args):
     envs_set(envs,args[0], liste)
     return liste
 
+
 def do_schauen(envs,args):
+    '''
+        args[0] : list object
+        args[1] : the index
+        returns : list[index]
+    '''
     assert len(args) == 2
     liste = do(envs,args[0])
     index = do(envs,args[1])
@@ -292,7 +375,12 @@ def do_schauen(envs,args):
 
     return liste[index]
 
+
 def do_lsetzen(envs,args):
+    ''' args[0] list object
+        args[1] index
+        args[2] value to set at index
+    '''
     assert len(args) == 3
     liste = do(envs,args[0])
     index = do(envs,args[1])
@@ -304,7 +392,24 @@ def do_lsetzen(envs,args):
     liste[index] = value
     return value
 
+def do_llaenge(envs,args):
+    '''
+        args[0] : list object
+        returns : length of list
+    '''
+    assert len(args[0]) == 1
+    lis = do(envs,args[0])
+    assert isinstance(lis,list)
+
+    return len(lis)
+
 def do_Wbuch(envs,args):
+    '''
+        args[0] : name of dictionary
+        args[1:]: (key,value) pairs
+        returns : the dictionarey with each key,value pair
+    '''
+    assert len(args) >0
     dict = {}
     for arg in args[1:]:
         assert len(arg)==2
@@ -314,6 +419,11 @@ def do_Wbuch(envs,args):
     return dict
 
 def do_Wschauen(envs,args):
+    '''
+        args[0] : dictionary object
+        args[1] : key which is in dictionary
+        returns : the value corresponding to key
+    '''
     assert len(args)==2
     dic = do(envs,args[0])
     key = do(envs,args[1])
@@ -324,6 +434,12 @@ def do_Wschauen(envs,args):
     return dic[key]
 
 def do_Wsetzen(envs,args):
+    '''
+        args[0] : dictionary object
+        args[1] : key in dictionary
+        args[2] : value to be set at key
+        returns : the modified dictionary
+    '''
     assert len(args) == 3
     dic = do(envs,args[0])
     assert isinstance(dic,dict)
@@ -332,9 +448,39 @@ def do_Wsetzen(envs,args):
 
     value = do(envs,args[2])
     dic[key] = value
-    return value
+    return dic
+
+def is_iterable(obj):
+    '''
+        obj: the object to check
+        returns : true if obj is an iterable
+    '''
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
+    
+
+def do_istdrin(envs,args):
+    '''
+        args[0] : iterable object A
+        args[1] : object B to check membership of A
+        returns : B in A
+    '''
+    assert len(args)==2
+    ite = do(envs,args[0])
+    obj = do(envs,args[1])
+    assert is_iterable(ite)
+
+    return int(obj in ite)
 
 def do_mischen(envs,args):
+    '''
+        args[0] : list object A
+        args[1] : list object B
+        returns : A | B , python function
+    '''
     assert len(args) == 3
     dic1 = do(envs,args[1])
     dic2 = do(envs,args[2])
@@ -346,6 +492,28 @@ def do_mischen(envs,args):
 
     envs_set(envs,args[0], dic3)
     return dic3
+
+
+def do_wennDann(envs,args):
+    '''
+        args[0] : condition to ve evalueated
+        args[1] : instruction to execute if condition is true
+        returns : the condition after evaluation if the condition was false
+        otherwise if the condition was successfull it returns the result of the 
+        operation executed
+    '''
+
+    assert len(args)==2
+
+    cond = do(envs,args[0])
+
+    if(bool(cond)):
+        return do(envs,args[1])
+    
+    return cond
+'''
+end Task 1, additional functionality
+'''
 
 def do_abfolge(envs,args):
     print("DO_ABFOLGE: \n")
