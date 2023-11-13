@@ -1,4 +1,5 @@
-## RTFM
+
+# How to use the little German language
 ## Task 1 additional functionality
 
 ### introduction
@@ -7,9 +8,9 @@ Our goal was to achieve these features by respecting design choices made in the 
 
 From now on the reader may assume that a presented operation is capable of taking integers or operations as input, unless stated otherwise.
 
-### basic operations
+### The basic operations in detail
 
-so `multiplizieren,dividieren,potenzieren` are pretty much identical to the arithmetic operations from core lgl.
+so `multiplizieren, dividieren, potenzieren` are pretty much identical to the arithmetic operations from core lgl.
 
 here is an example
 
@@ -23,7 +24,7 @@ here is an example
 
 next in order to implement a classical while loop, we needed logical operations:
 
-`kleinergl,kleiner` also adhere to the same principles and can take as arguments integers or other operations.
+`kleinergl, kleiner` also adhere to the same principles and can take as arguments integers or other operations.
 
 **important** : all logical operations in lgl return integers, namely 0 or 1.
 
@@ -39,13 +40,13 @@ example:
 
 `gleich` works in the same way
 
-`und,oder` are a bit special in the sense that they first convert the args into booleans (or what the args return, if they are operations themselves) and then with these booleans the `and`, `or` python operators are performed. finally the result is returned as an integer.
+`und, oder` are a bit special in the sense that they first convert the args into booleans (or what the args return, if they are operations themselves) and then with these booleans the `and`, `or` python operators are performed. finally the result is returned as an integer.
 
 with all these logical operations we are cabable of using while loops properly.
 
 **note**: in python, 0 is converted to false and any other integer is converted to true so if the user wants to store `true` in lgl, a non zero integer should be used, conversly for `false`, 0 should be used
 
-### lists, dictionaries and while loops
+### Lists, dictionaries and while loops in 
 
 across multiple programming languages the while loop is pretty consistent, it has a condition which is evaluated upon each iteration and a body of instructions which is executed on each iteration, as long as the condition is true.
 
@@ -124,7 +125,7 @@ example
 
 ```
 
-`Wsetzen` works jsut as `lsetzten` where the index is now the key
+`Wsetzen` works just as `lsetzten` where the index is now the key
 
 ```
 ["Wsetzen",["abrufen","zettel2"],["abrufen","bedingung"],44],
@@ -199,11 +200,127 @@ it works with everything that is also printable in python.
 the author notes that it was very tempting to introduce further features but out team decided that this provides a good set of operations which work well in combination with each other.
 
 
+## Task 2 An Object System
+### introduction
+To add classes and objects with the capability of single inheritance and polymorphism to the little language framework we added the following functions to the lgl_interpreter.py file:
 
+do_klasse:
+    this function brings the content of the class, meaning its required variables and its methods to a format with which the interpreter can work. 
 
-**How to use this framework**
+do_machen:
+    with this function added the interpreter now can create instances of a class.
 
-### 3. Tracing
+do_ausführen:
+    here we enable the calling of instance-specific methods
+
+### The different classes in detail
+
+#### do_klasse
+
+Classes in the little German language can take 2 forms, either with a parent class or not. To make this possible the do_klasse function distinguishes between args, which is a list, of length two or three. 
+
+If two arguments are given the class does not have a parent class and thus is not able to inherit anything. A class with no parent will have "None" as an argument whereas other classes might store a string with the name of the parent class. If one additional argument is given the do_klasse method interprets those three arguments in the following way:
+```python
+parent = args[0]
+variables = args[1]  
+methods = args[2]    
+return ["klasse", parent, variables, methods] 
+```
+
+As mentioned before parent is expected to be a string containing the name of the parent class and both variables and methods are expected as lists. 
+
+The goal of this method is to allow for the creation of "klasse" structures in the global environment which will serve as blueprints later on. 
+
+To create such a class structure in gsc one should ensure that the now-shown format is met:
+
+**To create a class with no parent class:**
+```
+["setzen", "class_name", 
+      ["klasse",["variable_1_name", "variable_2_name"], 
+        [["setzen", "method_1_name", ["funktion", ["parameter_1_name", "parameter_2_name"],               ["action_1_name", ["abrufen", "parameter_1_name"], ["abrufen", "parameter_2_name"]]]]
+        ]
+      ]
+    ]
+```
+
+**To create a class with a parent class:**
+```
+["setzen", "class_name", 
+      ["klasse", "parent_class_name",
+        ["variable_1_name", "variable_2_name"], 
+        [["setzen", "method_1_name", ["funktion", ["parameter_1_name", "parameter_2_name"], ["action_1_name", ["abrufen", "parameter_1_name"], ["abrufen", "parameter_2_name"]]]]
+        ]
+      ]
+    ]
+```
+
+After the do_klasse function returns its list it is saved in the global environment
+
+#### do_machen
+
+To create an instance of a class in gsc one should use the provided "machen" function like this:
+```
+["setzen", "instance_name", ["machen", "class_name", ["variable_1", "variable_2"]]]
+```
+
+This creates an instance of a class and saves it to the desired name, which allows the instance later to be accessed through the environment. 
+
+The do_machen function takes two arguments, the environment as well as a list of arguments, args, which contains the name of the class as well as the instance-specific values in a list. If a class does not require any variables the list of variables should still be passed but empty. 
+
+To gather all the variables and functions needed from all possible superclasses, the do_machen function uses a helper function called "helper_gather_class_info". Through recursively calling itself until there is no more superclass this function collects all variables needed as well as all methods that the instance has access to, either through its class, its direct superclass or superclasses of superclasses.
+
+The helper function returns a list with all variables needed which is organised in the following way:
+```
+[superclass_variable_1, superclass_variable_2, ..., superclass_variable_n, class_variable_1, class_varaible_2, ..., class_variable_n]
+```
+
+This is also how the arguments have to be passed in the arguments list of the "machen" function. 
+
+We felt that this was the most natural way to "read" inheritance structures, given that if they are pictured they are top to bottom, and we associated this with the left-to-right reading rather than right-to-left.
+
+The methods are returned in a dictionary with the format below:
+```
+{'method_name': ['funktion', ['variable'], ['action', ['abrufen', 'variable'], ['abrufen', 'variable']]], 'method_name2': ['funktion', ['variable2', 'variabel3'], ['action', ['abrufen', 'variable2'], ['abrufen', 'variabel3']]]}
+```
+
+With the returned variables and the received instance values, the do_machen function then creates a dictionary where the names of variables are mapped to their values. This combination of the class name and the methods returned in a list in this format:
+```python
+return ["instanz", class_name, instance_vars, instance_methods]
+```
+
+This is then, in another funciton saved to the global environment and then can be used to call function on a specific instance. 
+
+Instead of having to create a constructor function each time, which would lead to extra code in the gsc file thus making it less readable and as we learned in the lecture, a big part of creating software is understanding and thus reading what others already have created which means repetitive code is less desirable and thus worse, we decided to design the "machen" function to be a universal constructor. 
+
+We think that after having created a class which after all is the blueprint of an instance, which all follow the same basic structure, it is not needed to create a function that would use this blueprint and thus would all look more or less the same. In providing this universal constructor we add a layer of abstraction making our version of the little German language better readable for humans and easier to use.
+
+#### do_ausführen
+To use instance or class-specific functions we decided to create a new function rather than relying on the same do_aufrufen function that allows the little German language to use functions. 
+
+The "ausführen" method does require at least two arguments, the instance on which the funciton should be called as well as the method name. The funciton can take more arguments if the called function needs more than just the variables of the instance. If this is the case they are to be added after the two obligatory arguments.
+
+**ausführen call with no additonal arguments:**
+```
+["ausführen", ["instance_name", "method_name"]]
+```
+
+**ausführen call with additional arguments:**
+```
+["ausführen", ["instance_name", "method_name", "additional_arguement"]]
+```
+
+The funciton then retrieves the actual instance and verifies that it is an instance. From the retrieved instance all variables are retrieved and the specific method that the ausführen call used is selected if it exists. 
+
+In the next step, the function verifies that the method-required variables are there and that a call to the function is possible. The function is dependent on the fact that the name of the variables that are in the instance are the same as the function needs.
+If there are too many or too few arguments provided the funciton will complain. 
+
+After this an environment, containing the variables and the method needed, for the function call is created and added to the list of environments. After this the do_ausführen funciton calls the do_aufrufen funciton and passes the arguemtns. When the aufrufen function returns the results the before-added environment is removed from the list of environments and the results are returned.
+
+We designed the funciton in this way because we think that always having to pass the self-argument to a funciton is making the code somewhat verbose and introduces redundancy. In addition, it introduces a source for errors and we think that other languages solve this better than Python, for example, Javas with the always implicitly available this.
+
+# How to use the tracing framework**
+
+## Task 3 Tracing
 
 This feature can be used by adding the "--trace file_name" extension to the python command in the CLI.
 
@@ -212,11 +329,11 @@ This feature can be used by adding the "--trace file_name" extension to the pyth
 
 In the main function we check if the "--trace" flag is used. If it is used it sets the boolean `tracing = True` and `file` to the file name provided by the command. In an if-statement we check if the `tracing` variable is set to `True` then we add a decorator `log_function` to any function that starts with "do_".
 
-**log_function decorator**
+**log_function decorator**s
 
 In the log file we want to get the following information about the process: ID, name, start/stop and time. There should be two entries for each do-function that is called. One for when the function was called first (start) and one for when the function was finished (stop). This is the function:
 
-```python3
+```python
 def log_function(func):
     ID = get_ID()  # 1
     def _inner(envs, args):
@@ -247,7 +364,7 @@ In the main function we check if the arguments given from the command are suffic
 **format_report(rep: str)**
 
 This function transforms the raw data form the log file into a tabular form for the CLI.
-````python3
+````python
 def format_report(rep: str):
     # remove first line
     k = rep.split("\n") # 1
