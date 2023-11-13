@@ -42,104 +42,79 @@ def apply_decorators():
 # - # - # - # - #
 
 def do_klasse(envs, args):
-    assert len(args) >= 2
+    assert len(args) >= 2, "Wrong Format for a Klasse"
+    #no parent class given
     if len(args) == 2:
-        variables = args[0]  # list of variable names
-        methods = args[1]    # list of method definitions
+        variables = args[0] 
+        methods = args[1]   
         return ["klasse", None ,variables, methods]
+    #parent class given
     elif len(args) == 3:
         parent = args[0]
-        variables = args[1]  # list of variable names
-        methods = args[2]    # list of method definitions
+        variables = args[1]
+        methods = args[2]   
         return ["klasse", parent ,variables, methods] 
     
     assert False, "Wrong Format for a Klasse"
 
 def do_machen(envs, args):
-    # This function now takes a variable 'total_vars_needed' to keep track of the number of variables needed.
     assert len(args) == 2
     class_name, instance_values = args
 
-    # Retrieve the class structure from the environment.
+    #retrieve the class structure from the environment.
     klass = envs_get(envs, class_name)
     assert isinstance(klass, list) and klass[0] == "klasse"
 
-    # Recursively gather class information from ancestors.
-    all_variables, all_methods = helper_gather_class_info(envs, class_name)
-
-    # Check if the number of instance values matches the total number of class variables.
+    #recursively gather class information from ancestors with the helper.
+    all_variables, instance_methods = helper_gather_class_info(envs, class_name)
+  
+    #check if the number of instance values matches the total number of class variables.
     assert len(all_variables) == len(instance_values), \
         "Class instantiation requires matching number of values for variables."
 
-    # Create the instance variable structure.
+    #create the instance variable structure.
     instance_vars = dict(zip(all_variables, instance_values))
-
-    # Create the instance method structure, making sure to copy methods to avoid mutation.
-    instance_methods = {method_name: method for method_name, method in all_methods.items()}
-
-    # Construct the instance structure.
-    instance_structure = ["instanz", class_name, instance_vars, instance_methods]
     
-    return instance_structure
+    return ["instanz", class_name, instance_vars, instance_methods]
 
 def helper_gather_class_info(envs, class_name):
     klass = envs_get(envs, class_name)
-    if not klass:  # If class not found, raise an error or return a default value.
-        raise ValueError(f"Class {class_name} not found in the environment.")
+    assert klass, f"Class {class_name} not found in the environment."
 
+    #spliting class up, "klasse" string is not need thus = _
     _, class_parent, class_variables, class_methods = klass
 
-    # Initialize variables and methods with the current class's definitions.
+    #initialize variables and methods with the current class contnent.
     all_variables = class_variables.copy()
     all_methods = {method[1]: method[2] for method in class_methods}
 
-    # Recursively add parent class variables and methods.
+    #recursively add parent class variables and methods.
     if class_parent is not None:
         parent_variables, parent_methods = helper_gather_class_info(envs, class_parent)
-        all_variables = parent_variables + all_variables  # Parent vars come first.
-        all_methods.update(parent_methods)  # Parent methods are updated (or added if new).
+        all_variables = parent_variables + all_variables
+        all_methods.update(parent_methods)
 
     return all_variables, all_methods
 
 def do_ausführen(envs, args):
-    
-    """
-    class MyClass:
-        # This is a method of the class
-        def my_method(self):
-            print("Hello from my method!")
-
-    # Creating an instance of MyClass
-    my_instance = MyClass()
-    
-    # Calling my_method from my_instance
-    my_instance.my_method()
-
-    This way of calling a function is what do_ausführen replicates.
-    """
-    
     #flattenargs if nested, assuming that args[0] is a list if len(args) == 1
     args = args[0] if len(args) == 1 and isinstance(args[0], list) else args
-    #args could also include aarguments for functions that do require more than just self variables.
+    #args could also include aarguments for functions that do require more than just
     assert len(args) >= 2, "ausführen requires at least an instance name and a method name"
-
-    #gathring info fram arguemnt
-    instance_name, method_name = args[:2]
-    #any additional args provided to the method call
-    method_args_provided = args[2:] 
-
-    #getting the instance the function is a part of
-    instance = envs_get(envs, instance_name)
-    assert isinstance(instance, list) and instance[0] == "instanz", "Not an instance of a class"
-
-    #collecting the information form the instance needed to do the funciton call
-    _, class_name, instance_vars, instance_methods = instance
     
-    #retriev the called method and check if it is a valid method
+    instance_name, method_name = args[:2]
+    method_args_provided = args[2:]  # Any additional args provided to the method call
+
+    #retrieve the instance from envs
+    instance = envs_get(envs, instance_name)
+    assert isinstance(instance, list) and instance[0] == "instanz", "First argument must be an instance name"
+    _, _, instance_vars, instance_methods = instance
+    
+    #retrieve the method to be called
     method = instance_methods.get(method_name)
     assert method and isinstance(method, list) and method[0] == "funktion", f"{method_name} is not a method of {instance_name}"
 
-    # Verify the method's required variables against instance variables and provided args
+    #verify the method's required variables against instance variables and provided args
     required_vars = method[1]
     final_args = [method_name]
 
@@ -149,16 +124,17 @@ def do_ausführen(envs, args):
         elif method_args_provided:
             final_args.append(method_args_provided.pop(0))
         else:
-            raise AssertionError(f"Instance {instance_name} does not have the variable {var} and it was not provided as an argument")
+            assert False, f"Instance {instance_name} does not have the variable {var} and it was not provided as an argument"
     
-    # Check if there are leftover provided args that were not required
+    #check if there are leftover provided args that were not required
     if method_args_provided:
-        raise AssertionError(f"Too many arguments provided: {method_args_provided}")
+        assert False, "Too many arguments provided"
 
-    # Create a new environment for the method call, including the instance variables as a dictionary
-    envs_for_call = dict(instance_vars)  # dict() is used to ensure a copy of instance variables is passed
-    args_for_func = [key for key in envs_for_call.values()] # old line if stuff goes south: list_with_abrufen = [item for pair in zip(["abrufen"]*len(envs_for_call), envs_for_call.keys()) for item in pair]
+    #create a new environment for the method call, including the instance variables as a dictionary
+    envs_for_call = dict(instance_vars)
     envs_for_call[method_name] = instance_methods[method_name]
+
+    #adding the newly created env to the envs, to allow the funcitn call to work.
     envs.append(envs_for_call)
     result = do_aufrufen(envs, final_args)
     envs.pop()
