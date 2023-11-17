@@ -1,0 +1,1 @@
+# Test all 11 instruction of the assembler
