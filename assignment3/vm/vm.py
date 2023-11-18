@@ -74,6 +74,12 @@ class VirtualMachine:
             # [/add]
             elif op == OPS["sub"]["code"]:
                 self.reg[arg0] -= self.reg[arg1]
+            # [/inc]
+            elif op == OPS["inc"]["code"]:
+                self.reg[arg0] += 1
+            # [/dec]
+            elif op == OPS["dec"]["code"]:
+                self.reg[arg0] -= 1
             # [beq]
             elif op == OPS["beq"]["code"]:
                 if self.reg[arg0] == 0:
