@@ -6,7 +6,7 @@
 
 
 ldc R0 0
-ldc R1 10
+ldc R1 9
 
 ldc R2 @array
 
@@ -19,18 +19,21 @@ str R3 R2
 prr R3
 inc R2
 dec R1
-bnn R1 @loop
+bne R1 @loop
 
 
 
-# now array is initialized with values 10 to 0
+ldc R3 15
+prr R3
+
+# now array is initialized with values 10 to 1
 
 # now we reverse them inplace
 # pointer to start
 ldc R0 @array
 # pointer to end
 ldc R1 @array
-ldc R2 10
+ldc R2 9
 add R1 R2
 
 ldc R2 0
@@ -51,17 +54,18 @@ swp R2 R3
 str R2 R0
 str R3 R1
 
-#now decrement and increment
+#now increment the left pointer
 inc R0
 dec R1
 
-#compute diff of R2 and R3
+#compute diff of both poiners
 cpy R2 R0
 cpy R3 R1
 
 sub R3 R2
-# end loop if R3 is negative
-bnn R3 @loop1
+# end loop if both pointers coincide
+bne R3 @loop1
+
 
 
 #loop through array to check
@@ -70,10 +74,10 @@ ldc R0 0
 ldc R1 10
 ldc R2 @array
 
+prr R1
 prr R0
 prr R0
 prr R1
-prr R0
 
 loop2:
 # printing current vlaue of R2 at index R2
@@ -81,9 +85,7 @@ ldr R3 R2
 prr R3
 inc R2
 dec R1
-bnn R1 @loop2
-
-
+bne R1 @loop2
 
 hlt
 
