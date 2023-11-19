@@ -3,7 +3,7 @@ from assembler import Assembler, main
 
 class DataAllocator(Assembler):
 
-    # [assemble]
+    # [assemble]-----------
     DIVIDER = ".data"
 
     def assemble(self, lines):

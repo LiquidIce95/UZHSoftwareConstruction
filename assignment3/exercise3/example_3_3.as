@@ -1,38 +1,94 @@
 
-ldr R0 @array_base
-ldc R1 @array_length
+# - R0: loop index.
+# - R1: loop limit.
+# - R2: array index/address.
+# - R3: temporary.
 
-# customize here length of array and actual content
-# for demonstration we use 10 as length
-ldc R2 10
 
-# set the actual length to 10
-add R1 R2
+ldc R0 0
+ldc R1 10
 
-# set loop limit
-ldc R3 10
-# set the 'iterator' to base address
-ldr R4 R0
+ldc R2 @array
+
 
 loop:
-# store value to array
-ldc R4 R3
+str R1 R2
+# printing current vlaue of R2 at index R2
+ldr R3 R2
+str R3 R2
+prr R3
+inc R2
+dec R1
+bnn R1 @loop
 
-# increment the loop iterator
-inc R4
-# decrement the loop limit
-dec R3 
-bne R3 @loop
 
-# now array is initialized with values 10 to 1
 
+# now array is initialized with values 10 to 0
 
 # now we reverse them inplace
+# pointer to start
+ldc R0 @array
+# pointer to end
+ldc R1 @array
+ldc R2 10
+add R1 R2
+
+ldc R2 0
+ldc R3 0
+
+
+loop1:
+# load value from end of array
+ldr R2 R0
+
+#laod value from start of array
+ldr R3 R1
+
+# now swap
+swp R2 R3
+
+# now load back into
+str R2 R0
+str R3 R1
+
+#now decrement and increment
+inc R0
+dec R1
+
+#compute diff of R2 and R3
+cpy R2 R0
+cpy R3 R1
+
+sub R3 R2
+# end loop if R3 is negative
+bnn R3 @loop1
+
+
+#loop through array to check
+
+ldc R0 0
+ldc R1 10
+ldc R2 @array
+
+prr R0
+prr R0
+prr R1
+prr R0
+
+loop2:
+# printing current vlaue of R2 at index R2
+ldr R3 R2
+prr R3
+inc R2
+dec R1
+bnn R1 @loop2
+
 
 
 hlt
 
 
 .data
+array:10
 array_base: 1
 array_length: 1

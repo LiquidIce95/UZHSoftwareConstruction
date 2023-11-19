@@ -15,5 +15,6 @@ cpy R3 R1
 sub R3 R0
 bne R3 @loop
 hlt
+
 .data
 array: 10

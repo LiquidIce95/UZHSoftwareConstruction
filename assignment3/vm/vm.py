@@ -87,8 +87,8 @@ class VirtualMachine:
                 self.reg[arg0] = self.reg[arg1] 
                 self.reg[arg1] = temp
             # [/bnn]
-            elif op == OPS["bne"]["code"]:
-                if self.reg[arg0] <= 0:
+            elif op == OPS["bnn"]["code"]:
+                if self.reg[arg0] > 0:
                     self.ip = arg1
             
                 
