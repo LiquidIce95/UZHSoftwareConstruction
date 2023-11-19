@@ -15,7 +15,8 @@ OPS = {
     "prm": {"code": 0xB, "fmt": "r-"},  # Print memory
     "inc": {"code": 0xC, "fmt": "r-"},  # increment register by one
     "dec": {"code": 0XD, "fmt": "r-"},  # decrement register by one
-    "swp": {"code": 0xE, "fmt": "rr"},  #swaps the values of two registers
+    "swp": {"code": 0xE, "fmt": "rr"},  # swaps the values of two registers
+    "bnn": {"code": 0xE, "fmt": "rv"},  # Branch if zero or negative
 }
 
 OP_MASK = 0xFF  # select a single byte
