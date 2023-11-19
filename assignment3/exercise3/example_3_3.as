@@ -6,34 +6,32 @@
 
 
 ldc R0 0
-ldc R1 9
+ldc R1 10
 
 ldc R2 @array
 
 
 loop:
+dec R1
 str R1 R2
 # printing current vlaue of R2 at index R2
 ldr R3 R2
 str R3 R2
 prr R3
 inc R2
-dec R1
 bne R1 @loop
 
 
 
-ldc R3 15
-prr R3
 
-# now array is initialized with values 10 to 1
+# now array is initialized with values 9 to 0
 
 # now we reverse them inplace
 # pointer to start
 ldc R0 @array
 # pointer to end
 ldc R1 @array
-ldc R2 9
+ldc R2 10
 add R1 R2
 
 ldc R2 0
@@ -80,11 +78,12 @@ prr R0
 prr R1
 
 loop2:
+dec R1
+
 # printing current vlaue of R2 at index R2
 ldr R3 R2
 prr R3
 inc R2
-dec R1
 bne R1 @loop2
 
 hlt
