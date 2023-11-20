@@ -62,7 +62,7 @@ cpy R3 R1
 
 sub R3 R2
 # end loop if both pointers coincide
-bne R3 @loop1
+bnn R3 @loop1
 
 
 
