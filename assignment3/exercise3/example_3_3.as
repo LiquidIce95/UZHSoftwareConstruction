@@ -4,45 +4,44 @@
 # - R2: array index/address.
 # - R3: temporary.
 
-
+ldc R2 @array_length
 ldc R0 0
-ldc R1 10
+# modify array_length here
+ldc R1 9
+str R1 R2
 
 ldc R2 @array
 
-
+# first loop initiating array
 loop:
-dec R1
 str R1 R2
 # printing current vlaue of R2 at index R2
-ldr R3 R2
-str R3 R2
-prr R3
+prm R2
 inc R2
+dec R1
 bne R1 @loop
 
 
 
-
-# now array is initialized with values 9 to 0
+# now array is initialized with values 9 to 1
 
 # now we reverse them inplace
 # pointer to start
 ldc R0 @array
 # pointer to end
 ldc R1 @array
-ldc R2 10
+ldc R2 8
 add R1 R2
 
 ldc R2 0
 ldc R3 0
 
-
+# reverse inplace algorithm------------
 loop1:
-# load value from end of array
+# load value from start of array
 ldr R2 R0
 
-#laod value from start of array
+#laod value from end of array
 ldr R3 R1
 
 # now swap
@@ -51,6 +50,7 @@ swp R2 R3
 # now load back into
 str R2 R0
 str R3 R1
+
 
 #now increment the left pointer
 inc R0
@@ -68,28 +68,26 @@ bne R3 @loop1
 
 #loop through array to check
 
+
+ldc R2 @array_length
 ldc R0 0
-ldc R1 10
+# modify array_length here
+ldc R1 9
 ldc R2 @array
 
-prr R1
-prr R0
-prr R0
-prr R1
-
+# first loop initiating array
 loop2:
-dec R1
-
 # printing current vlaue of R2 at index R2
-ldr R3 R2
-prr R3
+prm R2
 inc R2
+dec R1
 bne R1 @loop2
 
 hlt
 
 
 .data
-array:10
+array:9
 array_base: 1
 array_length: 1
+riterator: 1
