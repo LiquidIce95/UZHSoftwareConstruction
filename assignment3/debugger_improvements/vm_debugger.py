@@ -46,9 +46,73 @@ class VirtualMachineBase:
             "break": self._do_add_breakpoint,
             "c": self._do_clear_breakpoint,
             "clear": self._do_clear_breakpoint,
+            "search": self._do_search_command,
+            "se": self._do_search_command,
+            "def": self._do_define
         }
 
 
+    def searchComm(self,command):
+        """
+            solves task 4.3
+            search algorithm wich searches for command of user
+
+            @command : the user input which we use to search for the command
+            @returns : the found command or false if nothing
+                        has been found
+        """
+        """if user calls directly search the command will come as a list"""
+        if(isinstance(command,list)):
+            command = command[0]
+
+        assert(command is str,"command is not a string")
+
+        """now lets search for what the user could possibly mean"""
+        self.write(f"is searching command {command}")
+        commands = [keys for keys in self.handlers]
+
+        commands.sort()
+        
+        matches = []
+
+        """we check for matching leading characters"""
+        for comm in commands:
+            if len(command) <= len(comm) and command == comm[0:len(command)]:
+                matches.append(comm)
+
+        """if command is clear"""
+        if(len(matches)==1):
+            self.write(f"found command {matches[0]}")
+
+            return matches[0]
+        elif (len(matches)>1):
+            self.write("input is ambigious, following are possible :\n")
+            for match in matches:
+                self.write(f" {match}")
+            
+            return command
+        else:
+            """IMPORTANT:if search was not successfull then wer return the original command to trigger the
+                command not in dict brach of following code"""
+            self.write(f"no matching commands found for {command}")
+            return False 
+
+
+    def define(self, alias, command):
+        if command not in self.handlers:
+            command = self.searchComm(command)
+        
+        if(command == False):
+            return False
+
+        value = self.handlers[command]
+
+        self.handlers[alias] = value
+        self.write(f"alias has been successfully created {alias} is now {command}")
+
+
+        return True
+        
 
     # [/init]
 
@@ -275,30 +339,36 @@ class VirtualMachineBase:
                 command = comm_args[0]
                 """default value for args"""
                 args = comm_args[1:]
-                fun = self.handlers[command]
-                fun_arg_count = 0
 
-                """if there were args we must check if command supports them """
-                if(len(args)>0):
-                    fun_arg_count = fun.__code__.co_argcount
-
-
-                """now we want to check if the command even supports the argument length"""
-
-
+                """checking if command is sound"""
                 if not command:
                     continue
                 
                 elif command not in self.handlers:
-                    self.write(f"Unknown command {command}")
-                elif args != [] and fun_arg_count <3:
+                    """use search algorithm for user commannd task 4.3"""
+                    command = self.searchComm(command)
+
+                    if command == False:
+                        continue
+
+                """if there were args we must check if command supports them """
+                fun = self.handlers[command]
+                fun_arg_count = 0
+
+                if(len(args)>0):
+                    fun_arg_count = fun.__code__.co_argcount
+
+
+                if args != [] and fun_arg_count <3:
                     """if command does not support augemnts"""
                     self.write(f"command does not support arguments") 
+                    continue
+                
                 elif args != [] and fun_arg_count == 3:
                     interacting = fun(self.ip,args)
 
                 else:
-                    """execute this if its a normal command"""
+                    """execute this if its a command without args"""
                     interacting = fun(self.ip)
             except EOFError:
                 self.state = VMState.FINISHED
@@ -437,6 +507,28 @@ class VirtualMachineBase:
             del self.breaks[addr]
             return True
         
+    def _do_search_command(self,addr,args=[]):
+        assert(len(args)==1)
+        self.searchComm(args)
+
+        return True
+
+    def _do_define(self,addr,args=[]):
+        """
+            solves ex 4.3
+            @args : arg[0] is the alias arg[1] is the command
+            @returns True if alias was successfull created None otherwise 
+        """
+        if(len(args)!=2):
+            self.write("you need to specify exactly two args")
+            return None
+        
+        result = self.define(args[0],args[1])
+
+        if (result == True):
+            return True
+        else:
+            return None
 
 if __name__ == "__main__":
     VirtualMachineBase.main()
