@@ -28,6 +28,8 @@ class VirtualMachineBase:
         self.reader = reader
         self.breaks = {}
 
+        self.watchs = {}
+
         """imported from vm_extend.py"""
         self.handlers = {
             "d": self._do_disassemble,
@@ -48,7 +50,9 @@ class VirtualMachineBase:
             "clear": self._do_clear_breakpoint,
             "search": self._do_search_command,
             "se": self._do_search_command,
-            "def": self._do_define
+            "def": self._do_define,
+            "watch" : self._do_set_watch,
+            "cwatch" : self._do_clear_watch
         }
 
 
@@ -136,6 +140,17 @@ class VirtualMachineBase:
             if op == OPS["brk"]["code"]:
                 original = self.breaks[self.ip]
                 op, arg0, arg1 = self.decode(original)
+                self.interact(self.ip)
+                self.ip += 1
+                self.execute(op, arg0, arg1)
+
+            elif op == OPS["wch"]["code"]:
+                original = self.breaks[self.ip]
+                op, arg0, arg1 = self.decode(original)
+
+                """now we check if the value has changed"""
+                
+
                 self.interact(self.ip)
                 self.ip += 1
                 self.execute(op, arg0, arg1)
@@ -529,6 +544,78 @@ class VirtualMachineBase:
             return True
         else:
             return None
+
+    def _do_set_watch(self,addr,args=[]):
+        """
+            @addr : current address the debugger is at
+            @args : optional, some address to set the debugger at
+            @returns : True if a berakpoint has been set
+                        None if there already was a breakpoint
+                        False if memory address was out of bounds
+        """
+        """currently code from set breakpoint"""
+
+        if(len(args)==1):
+            args[0] = int(args[0])
+
+            if(args[0] >= len(self.ram)):
+                self.write("memory address too large")
+                return False
+            elif(args[0]< 0):
+                self.write("memory address too low")
+                return False
+
+            addr = args[0]
+
+            if self.ram[addr] == OPS["brk"]["code"]:
+                return
+            self.breaks[addr] = self.ram[addr]
+            self.ram[addr] = OPS["brk"]["code"]
+            return True
+
+        elif(len(args)==0):
+            if self.ram[addr] == OPS["brk"]["code"]:
+                return
+            self.breaks[addr] = self.ram[addr]
+            self.ram[addr] = OPS["brk"]["code"]
+            return True
+
+    def _do_clear_watch(self,addr,args=[]):
+        """
+            @addr : current address the debugger is at
+            @args : optional, some address to set the debugger at
+            @returns : True if a berakpoint has been cleared
+                        None if there was no breakpoint
+                        False if memory address was out of bounds
+        """
+        """currently code from clear breakpoint"""
+        if(len(args)==0):
+            """copied from vm_break.py"""
+            if self.ram[addr] != OPS["brk"]["code"]:
+                return
+            self.ram[addr] = self.breaks[addr]
+            del self.breaks[addr]
+            return True
+
+        elif len(args)==1:
+            args[0] = int(args[0])
+
+            if(args[0] >= len(self.ram)):
+                self.write("memory address too large")
+                return False
+            elif(args[0]< 0):
+                self.write("memory address too low")
+                return False
+
+            addr = args[0]
+
+            """copied from vm_break.py"""
+            if self.ram[addr] != OPS["brk"]["code"]:
+                return None
+            self.ram[addr] = self.breaks[addr]
+            del self.breaks[addr]
+            return True
+
 
 if __name__ == "__main__":
     VirtualMachineBase.main()
