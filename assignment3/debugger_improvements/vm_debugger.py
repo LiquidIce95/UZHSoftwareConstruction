@@ -56,7 +56,7 @@ class VirtualMachineBase:
         }
 
 
-    def searchComm(self,command):
+    def searchComm(self,command=[]):
         """
             solves task 4.3
             search algorithm wich searches for command of user
@@ -65,6 +65,16 @@ class VirtualMachineBase:
             @returns : the found command or false if nothing
                         has been found
         """
+        """if user calls search without specified command list all commands"""
+        if(command == []):
+            self.write(" list of all commands ")
+
+            for command in self.handlers:
+                self.write(f"{command}")
+                "return empty matches"
+            
+            return False
+
         """if user calls directly search the command will come as a list"""
         if(isinstance(command,list)):
             command = command[0]
@@ -96,8 +106,6 @@ class VirtualMachineBase:
             
             return command
         else:
-            """IMPORTANT:if search was not successfull then wer return the original command to trigger the
-                command not in dict brach of following code"""
             self.write(f"no matching commands found for {command}")
             return False 
 
@@ -137,20 +145,31 @@ class VirtualMachineBase:
             instruction = self.ram[self.ip]
             op, arg0, arg1 = self.decode(instruction)
 
+            """check if any value has changed in the watch"""
+            """we make copy to avoid change in list error since self.watchs can be changed in loop"""
+            to_wacht = [addr for addr in self.watchs]
+            for addr in to_wacht:
+                if type(addr) is int and self.watchs[addr] != self.ram[addr]:
+                    self.write(f"watch triggered at {addr}")
+                    self.show()
+                    self.watchs[addr] = self.ram[addr]
+                    self.interact(self.ip)
+                    self.ip += 1
+                    self.execute(op, arg0, arg1)
+                    continue
+                elif type(addr) is str and self.watchs[addr] != self.reg[int(addr[1:])]:
+                    self.write(f"watch triggered at R{int(addr[1:])}")
+                    self.show()
+                    self.watchs[addr] = self.reg[int(addr[1:])]
+                    self.interact(self.ip)
+                    self.ip += 1
+                    self.execute(op, arg0, arg1)
+                    continue
+
+
             if op == OPS["brk"]["code"]:
                 original = self.breaks[self.ip]
                 op, arg0, arg1 = self.decode(original)
-                self.interact(self.ip)
-                self.ip += 1
-                self.execute(op, arg0, arg1)
-
-            elif op == OPS["wch"]["code"]:
-                original = self.breaks[self.ip]
-                op, arg0, arg1 = self.decode(original)
-
-                """now we check if the value has changed"""
-                
-
                 self.interact(self.ip)
                 self.ip += 1
                 self.execute(op, arg0, arg1)
@@ -261,6 +280,9 @@ class VirtualMachineBase:
         
         output = ""
 
+        self.assert_is_address(top)
+        self.assert_is_address(base)
+
         while base <= top:
             output += f"  {self.ram[base]:06x}"
             base += 1
@@ -301,6 +323,9 @@ class VirtualMachineBase:
             base = int(base)
             top = int(top)
 
+            self.assert_is_address(base)
+            self.assert_is_address(top)
+
             # Show IP and registers
             self.write(f"IP{' ' * 6}= {self.ip:06x}")
             for (i, r) in enumerate(self.reg):
@@ -309,7 +334,7 @@ class VirtualMachineBase:
             # How much memory to show
 
             # Show memory
-            while 0 <= base <= top <= len(self.ram):
+            while base <= top:
                 output = f"{base:06x}: "
                 for i in range(COLUMNS):
                     output += f"  {self.ram[base + i]:06x}"
@@ -318,10 +343,20 @@ class VirtualMachineBase:
                 
 
             """copied from vm_break.py"""
+            self.write("\n breaks \b")
             if self.breaks:
                 self.write("-" * 6)
                 for key, instruction in self.breaks.items():
-                    self.write(f"{key:06x}: {self.disassemble(key, instruction)}")  
+                    self.write(f"{key:06x}: {self.disassemble(key, instruction)}")
+
+            self.write("\n watchs \b")
+            if self.watchs:
+                self.write("-" * 6)
+                for key, value in self.watchs.items():
+                    if(type(key) is int):
+                        self.write(f"{key:06x}: {value} ")  
+                    else:
+                        self.write(f"{key}: {value} ")  
 
     def assert_is_register(self, reg):
         assert 0 <= reg < len(self.reg), f"Invalid register {reg:06x}"
@@ -463,27 +498,17 @@ class VirtualMachineBase:
         if(len(args)==1):
             args[0] = int(args[0])
 
-            if(args[0] >= len(self.ram)):
-                self.write("memory address too large")
-                return False
-            elif(args[0]< 0):
-                self.write("memory address too low")
-                return False
-
             addr = args[0]
 
-            if self.ram[addr] == OPS["brk"]["code"]:
-                return
-            self.breaks[addr] = self.ram[addr]
-            self.ram[addr] = OPS["brk"]["code"]
-            return True
+            self.assert_is_address(addr)
 
-        elif(len(args)==0):
-            if self.ram[addr] == OPS["brk"]["code"]:
+            
+
+        if self.ram[addr] == OPS["brk"]["code"]:
                 return
-            self.breaks[addr] = self.ram[addr]
-            self.ram[addr] = OPS["brk"]["code"]
-            return True
+        self.breaks[addr] = self.ram[addr]
+        self.ram[addr] = OPS["brk"]["code"]
+        return True
     # [/add]
 
     # [clear]
@@ -495,35 +520,21 @@ class VirtualMachineBase:
                         None if there was no breakpoint
                         False if memory address was out of bounds
         """
-        if(len(args)==0):
-            """copied from vm_break.py"""
-            if self.ram[addr] != OPS["brk"]["code"]:
-                return
-            self.ram[addr] = self.breaks[addr]
-            del self.breaks[addr]
-            return True
 
-        elif len(args)==1:
+        if len(args)==1:
             args[0] = int(args[0])
-
-            if(args[0] >= len(self.ram)):
-                self.write("memory address too large")
-                return False
-            elif(args[0]< 0):
-                self.write("memory address too low")
-                return False
 
             addr = args[0]
 
-            """copied from vm_break.py"""
-            if self.ram[addr] != OPS["brk"]["code"]:
-                return None
-            self.ram[addr] = self.breaks[addr]
-            del self.breaks[addr]
-            return True
+            self.assert_is_address(addr)
+
+        if self.ram[addr] != OPS["brk"]["code"]:
+                return
+        self.ram[addr] = self.breaks[addr]
+        del self.breaks[addr]
+        return True
         
     def _do_search_command(self,addr,args=[]):
-        assert(len(args)==1)
         self.searchComm(args)
 
         return True
@@ -556,28 +567,23 @@ class VirtualMachineBase:
         """currently code from set breakpoint"""
 
         if(len(args)==1):
-            args[0] = int(args[0])
+            """store watch for register"""
+            if(args[0][0] == 'R'):
+                addr = args[0]
+                
 
-            if(args[0] >= len(self.ram)):
-                self.write("memory address too large")
-                return False
-            elif(args[0]< 0):
-                self.write("memory address too low")
-                return False
+            else:
+                addr = int(args[0])
+                self.assert_is_address(addr)
 
-            addr = args[0]
-
-            if self.ram[addr] == OPS["brk"]["code"]:
+        if addr in self.watchs:
                 return
-            self.breaks[addr] = self.ram[addr]
-            self.ram[addr] = OPS["brk"]["code"]
+        
+        if(type(addr) is str):
+            self.watchs[addr] = self.reg[int(addr[1:])]
             return True
-
-        elif(len(args)==0):
-            if self.ram[addr] == OPS["brk"]["code"]:
-                return
-            self.breaks[addr] = self.ram[addr]
-            self.ram[addr] = OPS["brk"]["code"]
+        else:
+            self.watchs[addr] = self.ram[addr]
             return True
 
     def _do_clear_watch(self,addr,args=[]):
@@ -588,33 +594,23 @@ class VirtualMachineBase:
                         None if there was no breakpoint
                         False if memory address was out of bounds
         """
-        """currently code from clear breakpoint"""
-        if(len(args)==0):
-            """copied from vm_break.py"""
-            if self.ram[addr] != OPS["brk"]["code"]:
+
+
+
+        if(len(args)==1):
+
+            if(args[0][0] == 'R'):
+                addr = args[0]
+                
+            else:
+                addr = int(args[0])
+            
+
+        if addr not in self.watchs:
                 return
-            self.ram[addr] = self.breaks[addr]
-            del self.breaks[addr]
-            return True
-
-        elif len(args)==1:
-            args[0] = int(args[0])
-
-            if(args[0] >= len(self.ram)):
-                self.write("memory address too large")
-                return False
-            elif(args[0]< 0):
-                self.write("memory address too low")
-                return False
-
-            addr = args[0]
-
-            """copied from vm_break.py"""
-            if self.ram[addr] != OPS["brk"]["code"]:
-                return None
-            self.ram[addr] = self.breaks[addr]
-            del self.breaks[addr]
-            return True
+            
+        del self.watchs[addr]
+        return True
 
 
 if __name__ == "__main__":
