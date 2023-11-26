@@ -54,15 +54,31 @@ str R3 R1
 
 #now increment the left pointer
 inc R0
-dec R1
 
 #compute diff of both poiners
 cpy R2 R0
 cpy R3 R1
 
 sub R3 R2
+
+#brach to loop if R3 equals 0 now , then pointer coincide
+beq R3 @end
+# check here if both coincide
+
+
+# now decrement the right pointer
+dec R1
+#compute diff
+cpy R2 R0
+cpy R3 R1
+
+sub R3 R2
+
+#check here if both coincide
+
+end:
 # end loop if both pointers coincide
-bnn R3 @loop1
+bne R3 @loop1
 
 
 
