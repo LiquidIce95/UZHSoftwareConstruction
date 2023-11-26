@@ -36,46 +36,46 @@ ldc R3 0
 
 # reverse inplace algorithm-------------------------------
 loop1:
-# load value from start of array
+# load value from start of array 1
 ldr R2 R0
 
-#laod value from end of array
+#laod value from end of array 2
 ldr R3 R1
 
-# now swap
+# now swap 3 
 swp R2 R3
 
-# now load back into
+# now load back into 4
 str R2 R0
 str R3 R1
 
 
-#now increment the left pointer
+#now increment the left pointer 5
 inc R0
 
-#compute diff of both poiners
+#compute diff of both poiners 6
 cpy R2 R0
 cpy R3 R1
 
 sub R3 R2
 
-#brach to loop if R3 equals 0 now , then pointer coincide
+#brach to loop if R3 equals 0 now , then pointer coincide 7
 beq R3 @end
-# check here if both coincide
+# check here if both coincide 8
 
 
-# now decrement the right pointer
+# now decrement the right pointer 9
 dec R1
-#compute diff
+#compute diff 10
 cpy R2 R0
 cpy R3 R1
 
 sub R3 R2
 
-#check here if both coincide
+#check here if both coincide 11
 
 end:
-# end loop if both pointers coincide
+# end loop if both pointers coincide 12
 bne R3 @loop1
 
 # end of reverse in place algorithm--------------------------

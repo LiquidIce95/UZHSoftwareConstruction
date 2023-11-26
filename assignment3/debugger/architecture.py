@@ -14,6 +14,7 @@ OPS = {
     "prr": {"code": 10, "fmt": "r-"},  # Print register
     "prm": {"code": 11, "fmt": "r-"},  # Print memory
     "brk": {"code": 15, "fmt": "--"},  # Breakpoint
+    "wch": {"code": 16, "fmt": "--"}, # watchpoint
 }
 
 OP_MASK = 0xFF  # select a single byte
