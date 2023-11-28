@@ -111,11 +111,18 @@ class VirtualMachineBase:
 
 
     def define(self, alias, command):
+        """
+            @alias : the reference to the command
+            @command : the command which shall be referenced by alias
+        """
         if command not in self.handlers:
             command = self.searchComm(command)
         
         if(command == False):
             return False
+
+        if(alias in self.handlers):
+            self.write(f"{alias} is already in use!")
 
         value = self.handlers[command]
 
@@ -353,10 +360,11 @@ class VirtualMachineBase:
             if self.watchs:
                 self.write("-" * 6)
                 for key, value in self.watchs.items():
+                    value = int(value)
                     if(type(key) is int):
-                        self.write(f"{key:06x}: {value} ")  
+                        self.write(f"{key:06x}: {value:06x} ")  
                     else:
-                        self.write(f"{key}: {value} ")  
+                        self.write(f"{key}: {value:06x} ")  
 
     def assert_is_register(self, reg):
         assert 0 <= reg < len(self.reg), f"Invalid register {reg:06x}"
@@ -575,6 +583,9 @@ class VirtualMachineBase:
             else:
                 addr = int(args[0])
                 self.assert_is_address(addr)
+
+        else:
+            addr = int(addr)
 
         if addr in self.watchs:
                 return

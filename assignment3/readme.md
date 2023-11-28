@@ -526,11 +526,18 @@ which only adds to the dictionary if it isnt already in there
 
 ```python
 def define(self, alias, command):
+        """
+            @alias : the reference to the command
+            @command : the command which shall be referenced by alias
+        """
         if command not in self.handlers:
             command = self.searchComm(command)
         
         if(command == False):
             return False
+
+        if(alias in self.handlers):
+            self.write(f"{alias} is already in use!")
 
         value = self.handlers[command]
 
@@ -566,6 +573,9 @@ def _do_set_watch(self,addr,args=[]):
             else:
                 addr = int(args[0])
                 self.assert_is_address(addr)
+
+        else:
+            addr = int(addr)
 
         if addr in self.watchs:
                 return
@@ -611,13 +621,104 @@ just like with the `break` command one can specify a watch without argumetns, th
 or by specifying the address
 
 ```
-000004 [bcdimqrswz]> watch
-000004 [bcdimqrswz]> m
-IP      = 000004
+000005 [bcdimqrsw]> watch
+000005 [bcdimqrsw]> m
+IP      = 000005
 R000000 = 000001
 R000001 = 000005
 R000002 = 000000
 R000003 = 00000b
+000000:   010002  050102  0b0302  00000a
+000004:   030005  010202  020006  010204
+000008:   000207  030209  000001  000001
+
+ breaks 
+
+ watchs 
+------
+000005: 010202 
+```
+
+and with specified addreess
+
+```
+000005 [bcdimqrsw]> watch 7
+000005 [bcdimqrsw]> m
+IP      = 000005
+R000000 = 000001
+R000001 = 000005
+R000002 = 000000
+R000003 = 00000b
+000000:   010002  050102  0b0302  00000a
+000004:   030005  010202  020006  010204
+000008:   000207  030209  000001  000001
+
+ breaks 
+
+ watchs 
+------
+000005: 010202 
+000007: 010204 
+```
+
+
+now we will use the following assembly code to showcase the remaining functions
+
+```
+# Count up to 3.
+# - R0: loop index.
+# - R1: loop limit.
+ldc R0 1
+ldc R1 5
+ldc R3 11
+loop:
+prr R0
+str R0 R3
+ldc R2 1
+add R0 R2
+cpy R2 R1
+sub R2 R0
+bne R2 @loop
+hlt
+
+```
+
+notice that `str R0 R3` stores the value of R0 at 11 (value of R3). Now lets watch 11.
+
+```
+000000 [bcdimqrsw]> watch 11
+000000 [bcdimqrsw]> run
+000001
+watch triggered at 11
+IP      = 000005
+R000000 = 000001
+R000001 = 000005
+R000002 = 000000
+R000003 = 00000b
+000000:   010002  050102  0b0302  00000a
+000004:   030005  010202  020006  010204
+000008:   000207  030209  000001  000001
+
+ breaks 
+
+ watchs 
+------
+00000b: 000000 
+```
+
+console displayes a "watch triggered" message before printing all memory, user sees the old value in the watch table and current value in the memory table.
+
+Now we also can watch registers by simply using the watch command with a register as argument.
+
+```
+000000 [bcdimqrsw]> watch R0
+000000 [bcdimqrsw]> run
+watch triggered at R0
+IP      = 000001
+R000000 = 000001
+R000001 = 000000
+R000002 = 000000
+R000003 = 000000
 000000:   010002  050102  0b0302  00000a
 000004:   030005  010202  020006  010204
 000008:   000207  030209  000001  000000
@@ -626,10 +727,9 @@ R000003 = 00000b
 
  watchs 
 ------
-000004: 196613 
+R0: 000000 
 ```
 
-and below in teh watchs section our created watch is printed
-
+We decided to include this feature since assembly programmers are probably also interested in watching the registers.
 
 
