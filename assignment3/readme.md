@@ -49,9 +49,9 @@ pretty self explanatory
 
 ### Reverse array in place
 
-to prove the correctness of the algorithm we refer to the comments of the algorithm in example_3_3.as file
+to prove the correctness of the algorithm we refer to the comments of the algorithm in example_3_3.as file, this is the file where its implemented.
 
-first Invariant:
+Invariants:
 
 R0 and R1 store the address of the first element and the last element of the subarray which is not reversed yet.
 
@@ -77,8 +77,9 @@ at the `ldc R1 17` instruction set the array length (actual size used in algorit
 
 Since Greg admitted in the lecture that his architecture makes no sense and was designed that way only for educational purposes, we decided to design only one debugger class **VirtaulMachineBase** in which all functionality is in. Furthermore we made sure to keep all functions small in size and never more than 3 nested (3 identation levels deep) although there are few excpetions. We also kept the handlers dictionaray and strucutre with the "_do_" functions.
 
+to use the debugger run `python vm_debugger.py watch.mx` where watch.mx is the compiled assembly programm.
 
-One Major change despite moving everything into one file is the interact function:
+One Major change apart from moving everything into one file is the interact function:
 
 ```python
 def interact(self, addr):
@@ -199,7 +200,7 @@ def run(self):
                 self.execute(op, arg0, arg1)
 ```
 
-here we first check if an address is being watched. We first tried to implement the watch just like breaks but that made it impossible to check if the value has changed (since the value at that address is a watch and not the original value anymore). Its for sure not the moste efficient solution. But considering time constraints of development, decreasing development time seemed to be more important.
+here we first check if an address is being watched. We first tried to implement the watch just like breaks but that made it impossible to check if the value has changed (since the value at that address is a watch and not the original value anymore). Its for sure not the most efficient solution. But considering time constraints of development, decreasing development time seemed to be more important.
 
 
 
@@ -340,7 +341,7 @@ def _do_clear_breakpoint(self, addr, args=[]):
         return True
 ```
 
-
+simply calling `break 3` or `clear 3` sets and clears a breakpoint at address 3
 
 ### Command Completion
 
@@ -488,10 +489,12 @@ input is ambigious, following are possible :
  step
 ```
 
-Note that if user types only `s` it will be recognized in the handlers dictionary but if using the search algorithm directly we dont check if its in the handlers dictionary.
+Note that if user types only `s` it will be recognized in the handlers dictionary but if using the search algorithm directly we dont check if its in the handlers dictionary. The reason for this design choice is to give programmers the ability to see all commands for a given search input.
+
+Note that this way a help systems could be implemented which gives descriptions of the commands and examples
 
 
-Lastly, the user can specify and alias to a command with `def`:
+Lastly, the user can specify an alias to a command with `def`:
 
 ```
 000001 [bcdimqrsw]> def zuuu search
@@ -733,3 +736,5 @@ R0: 000000
 We decided to include this feature since assembly programmers are probably also interested in watching the registers.
 
 
+
+this concludes the section for task 3 and 4
