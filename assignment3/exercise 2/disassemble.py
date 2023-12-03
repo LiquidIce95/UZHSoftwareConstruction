@@ -1,4 +1,5 @@
 import sys
+import re
 
 OPS = {
     0x1: "hlt --",
@@ -12,6 +13,9 @@ OPS = {
     0x9: "bne rv",
     0xA: "prr r-",
     0xB: "prm r-",
+    0xC: "inc r-",
+    0xD: "dec r-",
+    0xE: "swp rr"
 }
 
 OP_MASK = 0xFF
@@ -25,6 +29,8 @@ def disassemble_instruction(instruction):
     instruction >>= OP_SHIFT
     arg1 = instruction & OP_MASK
 
+    assert op in OPS, f"Unknown operation used {op}"
+
     asm_op, fmt = OPS[op].split()
 
     args = []
@@ -36,6 +42,7 @@ def disassemble_instruction(instruction):
         args.append(str(arg1))
 
     return f"{asm_op} {' '.join(args)}", op
+
 
 def insert_labels(asm_lines):
     label_count = 1
@@ -59,22 +66,36 @@ def insert_labels(asm_lines):
 
 def disassemble_file(input_file, output_file):
     asm_lines = []
-    with open(input_file, 'r') as infile:
-        for line in infile:
-            instruction = int(line.strip(), 16)
-            asm_line, op = disassemble_instruction(instruction)
-            asm_lines.append((asm_line, op))
 
+    #iterating over all the lines in the .mx file
+    with open(input_file, 'r') as in_file:
+
+        #testing if the file passed to the disassembler is emtpy
+        assert len(in_file.read()) != 0, "File is empty"
+
+        #resetting the reader, so that non-empty files get executed corretly
+        in_file.seek(0)
+        for line in in_file:
+            #checking if the lines are in hexadecimal
+            assert re.match(r'^[0-9A-Fa-f]{6}$', line.strip()), "File contains elements that do not match the mx format"
+            #adding the lines with a changed format to the list from which the .as file will be constructed
+            asm_lines.append(disassemble_instruction(int(line.strip(), 16)))
+
+    #adding the labels to the assembly code
     insert_labels(asm_lines)
 
-    with open(output_file, 'w') as outfile:
-        for line, _ in asm_lines:
-            outfile.write(line + "\n")
+    #writing the ouput file
+    with open(output_file, 'w') as out_file:
+        out_file.write("".join(line + "\n" for line, _ in asm_lines))
+
+def main_for_tests(files):
+    assert files[0].endswith(".mx") and files[1].endswith(".as"), "Input has to be a .mx file, Output has to be a .as file"
+    disassemble_file(files[0], files[1])
+
+def main():
+    assert len(sys.argv) == 3, "Usage: python disassemble.py input_file.mx output_file.as"
+    assert sys.argv[1][-3:] == ".mx" and sys.argv[2][-3:] == ".as", "Input has to be a .mx file, Output has to be a .as file"
+    disassemble_file(sys.argv[1], sys.argv[2])
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python disassemble.py input_file.mx output_file.as")
-    else:
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
-        disassemble_file(input_file, output_file)
+    main()
