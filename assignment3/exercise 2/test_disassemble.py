@@ -1,12 +1,10 @@
 import pytest
 import os
-import disassemble_v2
+import disassemble
 from contextlib import contextmanager
 import vm
 import re
 import assembler
-
-
 
 #Helper function that creates the testfiles
 @contextmanager
@@ -20,7 +18,7 @@ def create_temp_input_file(content):
         os.remove(filename)
 
 def opcodes_setup(input_file):
-    disassemble_v2.main_for_tests([input_file, "temp.as"])
+    disassemble.main_for_tests([input_file, "temp.as"])
     results = extract_opcodes("temp.as")
     os.remove("temp.as")
     return results
@@ -30,7 +28,7 @@ def extract_opcodes(file_path):
         return [line.split()[0] for line in file if line.strip() and ':' not in line]
 
 def labels_setup(input_file):
-    disassemble_v2.main_for_tests([input_file, "temp.as"])
+    disassemble.main_for_tests([input_file, "temp.as"])
     results = extract_label_positions("temp.as")
     os.remove("temp.as")
     return results
@@ -76,7 +74,7 @@ def run_vm(input_file):
 
 def final_outcome_set_up(input_file):
     assemb = assembler.Assembler
-    disassemble_v2.main_for_tests([input_file, "output_tester.as"])
+    disassemble.main_for_tests([input_file, "output_tester.as"])
     assembler.main_for_tests(assemb, input_path="output_tester.as", output_path="transformed.mx")
     os.remove("output_tester.as")
     result = run_vm("transformed.mx")
@@ -88,19 +86,19 @@ def final_outcome_set_up(input_file):
 def test_wrong_input_extension_correct_output_extension():
     test_args = ["input_file.txt", "output_file.as"]
     with pytest.raises(AssertionError) as excinfo:
-        disassemble_v2.main_for_tests(test_args)
+        disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "Input has to be a .mx file, Output has to be a .as file"
 
 def test_correct_input_extension_wrong_output_extension():
     test_args = ["input_file.mx", "output_file.txt"]
     with pytest.raises(AssertionError) as excinfo:
-        disassemble_v2.main_for_tests(test_args)
+        disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "Input has to be a .mx file, Output has to be a .as file"
 
 def test_wrong_input_output_extensions():
     test_args = ["input_file.txt", "output_file.txt"]
     with pytest.raises(AssertionError) as excinfo:
-        disassemble_v2.main_for_tests(test_args)
+        disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "Input has to be a .mx file, Output has to be a .as file"
 
 #################  Testing the handling of wrong formats  #################
@@ -109,28 +107,28 @@ def test_non_hexadecimal_content():
     with create_temp_input_file("GHI1KL\n12A456") as temp_file:
         test_args = [temp_file, "output_hex.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "File contains elements that do not match the mx format"
 
 def test_improperly_formatted_line_length():
     with create_temp_input_file("12345\n1234567") as temp_file:
         test_args = [temp_file, "output_length.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "File contains elements that do not match the mx format"
 
 def test_improperly_formatted_line_space():
     with create_temp_input_file("123 45\n1234567") as temp_file:
         test_args = [temp_file, "output_space.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "File contains elements that do not match the mx format"
 
 def test_empty_file():
     with create_temp_input_file("") as temp_file:
         test_args = [temp_file, "output_empty.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
     assert str(excinfo.value) == "File is empty"
 
 #################  Testing the operation codes  #################
@@ -140,7 +138,7 @@ def test_wrong_opcode_to_low():
     with create_temp_input_file(opcodes) as temp_file:
         test_args = [temp_file, "output.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
         assert "Unknown operation used" in str(excinfo.value)   # Replace with your specific error message
 
 def test_wrong_opcode_to_high():
@@ -148,46 +146,28 @@ def test_wrong_opcode_to_high():
     with create_temp_input_file(opcodes) as temp_file:
         test_args = [temp_file, "output.as"]
         with pytest.raises(AssertionError) as excinfo:
-            disassemble_v2.main_for_tests(test_args)
+            disassemble.main_for_tests(test_args)
         assert "Unknown operation used" in str(excinfo.value)   # Replace with your specific error message
 
 #################  Testing the operation codes placement and order  #################
-def test_opcodes_comparison_1():
-    assert opcodes_setup("test_disassembler_1.mx") == extract_opcodes("test_disassembler_1.as")
-
-def test_opcodes_comparison_2():
-    assert opcodes_setup("test_disassembler_2.mx") == extract_opcodes("test_disassembler_2.as")
-
-def test_opcodes_comparison_3():
-    assert opcodes_setup("test_disassembler_3.mx") == extract_opcodes("test_disassembler_3.as")
-
-def test_opcodes_comparison_4():
-    assert opcodes_setup("test_disassembler_4.mx") == extract_opcodes("test_disassembler_4.as")
-
-def test_opcodes_comparison_5():
-    assert opcodes_setup("test_disassembler_5.mx") == extract_opcodes("test_disassembler_5.as")
+def test_opcodes_comparisons():
+    for i in range(1, 6):
+        mx_file = f"test_disassembler_{i}.mx"
+        as_file = f"test_disassembler_{i}.as"
+        assert opcodes_setup(mx_file) == extract_opcodes(as_file)
 
 #################  Testing the labels  #################
 
-def test_label_comparison_4():
-    assert labels_setup("test_disassembler_4.mx") == extract_label_positions("test_disassembler_4.as")
-
-def test_label_comparison_5():
-    assert labels_setup("test_disassembler_5.mx") == extract_label_positions("test_disassembler_5.as")
+def test_label_comparisons():
+    for i in range(4, 6):
+        mx_file = f"test_disassembler_{i}.mx"
+        as_file = f"test_disassembler_{i}.as"
+        assert labels_setup(mx_file) == extract_label_positions(as_file)
 
 #################  Testing final outcome and the expected results are the same  #################
-def test_finanl_outcome_1():
-    assert run_vm("test_disassembler_1.mx") == final_outcome_set_up("test_disassembler_1.mx")
-    
-def test_finanl_outcome_2():
-    assert run_vm("test_disassembler_2.mx") == final_outcome_set_up("test_disassembler_2.mx")
 
-def test_finanl_outcome_3():
-    assert run_vm("test_disassembler_3.mx") == final_outcome_set_up("test_disassembler_3.mx")
-
-def test_finanl_outcome_4():
-    assert run_vm("test_disassembler_4.mx") == final_outcome_set_up("test_disassembler_4.mx")
-
-def test_finanl_outcome_5():
-    assert run_vm("test_disassembler_5.mx") == final_outcome_set_up("test_disassembler_5.mx")
+def test_final_outcomes():
+    for i in range(1, 6):
+        mx_file = f"test_disassembler_{i}.mx"
+        assert run_vm(mx_file) == final_outcome_set_up(mx_file)
 
