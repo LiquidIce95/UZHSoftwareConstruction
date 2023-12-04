@@ -6,60 +6,64 @@ import vm
 import re
 import assembler
 
-#Helper function that creates the testfiles
+#helper function that creates the testfiles
 @contextmanager
 def create_temp_input_file(content):
-    filename = "temp_input.mx"
     try:
-        with open(filename, 'w') as file:
+        with open("temp_input.mx", 'w') as file:
             file.write(content)
-        yield filename
+        yield "temp_input.mx"
     finally:
-        os.remove(filename)
+        os.remove("temp_input.mx")
 
+#setupu function for the op_code tests
 def opcodes_setup(input_file):
     disassemble.main_for_tests([input_file, "temp.as"])
     results = extract_opcodes("temp.as")
     os.remove("temp.as")
     return results
 
+#function that creates alist with all op_codes used
 def extract_opcodes(file_path):
     with open(file_path, 'r') as file:
         return [line.split()[0] for line in file if line.strip() and ':' not in line]
 
+#setup funciton for the label tests
 def labels_setup(input_file):
     disassemble.main_for_tests([input_file, "temp.as"])
     results = extract_label_positions("temp.as")
     os.remove("temp.as")
     return results
 
-
+#extracts all the lable postiions in a as file
 def extract_label_positions(file_path):
     positions = []
     with open(file_path, 'r') as file:
         for line_number, line in enumerate(file, start=1):
             line = line.strip()
             if line.endswith(':'):
-                # Store the line number where the label is defined
+                #store the line number where the label is defined
                 positions.append((line_number, None))
             elif '@' in line:
-                # Update the last entry with the line number where the label is referenced
+                #update the last entry with the line number where the label is referenced
                 if positions and positions[-1][1] is None:
                     positions[-1] = (positions[-1][0], line_number)
     return positions
 
+#funciton that extracts the last number from the captured vm output
 def extract_last_number(output):
-    # Find all occurrences of '>> ' followed by one or more digits
+    #finding all occurrences of '>> ' followed by one or more digits
     matches = re.findall(r'>> (\d+)', output)
 
-    # Check if there are any matches
+    #check if there are any matches
     if matches:
-        # Return the last match as an integer
+        #return the last match as an integer
         return int(matches[-1])
     else:
-        # Return None or raise an error if no match is found
+        #return None, which will then rais an assertion error if one file outputs somethig and the other not.
         return None
 
+#function that handles the vm calls.
 def run_vm(input_file):
     virt = vm.VirtualMachine()
     x = vm.main_for_tests(virt, input_file, "out.out")
@@ -139,7 +143,7 @@ def test_wrong_opcode_to_low():
         test_args = [temp_file, "output.as"]
         with pytest.raises(AssertionError) as excinfo:
             disassemble.main_for_tests(test_args)
-        assert "Unknown operation used" in str(excinfo.value)   # Replace with your specific error message
+        assert "Unknown operation used" in str(excinfo.value)
 
 def test_wrong_opcode_to_high():
     opcodes = "02000F\n000103\n000202\n000302\n000204\n000305\n000001"
@@ -147,9 +151,10 @@ def test_wrong_opcode_to_high():
         test_args = [temp_file, "output.as"]
         with pytest.raises(AssertionError) as excinfo:
             disassemble.main_for_tests(test_args)
-        assert "Unknown operation used" in str(excinfo.value)   # Replace with your specific error message
+        assert "Unknown operation used" in str(excinfo.value) 
 
 #################  Testing the operation codes placement and order  #################
+
 def test_opcodes_comparisons():
     for i in range(1, 6):
         mx_file = f"test_disassembler_{i}.mx"
@@ -159,7 +164,7 @@ def test_opcodes_comparisons():
 #################  Testing the labels  #################
 
 def test_label_comparisons():
-    for i in range(4, 6):
+    for i in range(1, 6):
         mx_file = f"test_disassembler_{i}.mx"
         as_file = f"test_disassembler_{i}.as"
         assert labels_setup(mx_file) == extract_label_positions(as_file)
