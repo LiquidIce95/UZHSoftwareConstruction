@@ -318,7 +318,7 @@ from contextlib it uses contextmanager, which is used for setup and teardown as 
 
 and finaly the test file uses python regular expression to, re, to modify the output captured by the StringIO buffer to allow us to compare the ouput of the vm:
 ```python
-matches = re.findall(r'>> (\d+)', output)
+    matches = re.findall(r'>> (\d+)', output)
 ```
 
 In addition it of cours imports the vm, the disassember as well as the assembler. 
