@@ -1,3 +1,136 @@
+## Exercise 1
+
+### The tester for the assembler
+
+**comparing files**
+
+If the assembler.py file runs correctly it will save its output into a predefined 
+".mx" file. Because I calculated the ".mx" files manually for each assembler file
+I need a function that compares the code in both files. In my case that is the 
+``assert_equality_of_files(file_a, file_b)`` function. It creates a list for each 
+line in a file. But we have to be careful to ignore empty lines of code. For that
+I used a lambda function.
+
+```python 
+a = list(filter(lambda x: x != '', a.split("\n")))
+```
+
+next up we make sure that both lists have the same length. If they do we iterate 
+through each line comparing the two strings having the same list index.
+
+**running the assembler from the testfile**
+
+next up we need a function that calls the main function of the assembler. For 
+that I had to write a new main function in the ```assembly.py``` file, because 
+the standard function listens to a call from the CLI. I made a slight modification. 
+
+```python 
+def main_test(assember_cls, file_input, file_output):
+    reader = open(file_input, "r")
+    writer = open(file_output, "w")
+    lines = reader.readlines()
+    assembler = assember_cls()
+    program = assembler.assemble(lines)
+    for instruction in program:
+        print(instruction, file=writer)
+```
+
+The test function takes the assembly file and the desired output file as arguments. 
+We call it from the ```call_assembler_for_test_files(input, output)``` in the 
+``assembly_test.py`` file.
+
+We are almost through the code. For aesthetic reasons I created the ```run(case, input)```
+function that calls ``assert_equalitity_of_files`` and ``call_assembler_for_test_files``
+
+**Automatic testing**
+
+I wrote a total of 6 assembly files. It is not nice to write all 6 (basically) same 
+functions after another and takes too much time. No programmer likes to repeat 
+code. That is the reason why I made use of pytest parameterization with the decorator 
+
+```python
+@pytest.mark.parametrize(parameters, [list of arguments])
+```
+
+next up I only had to write one more test that expects an error.
+
+**Files for the assembler**
+
+The assembly input files are located in the Assembly_Files folder together with 
+the output files of the assembler. My manually calculated files are located in the 
+Test_Files/Assembly folder. 
+
+### The tester for the vm
+
+The ```vm_test.py``` is analogical to the architecture of the ``assembler_test.py`` file. 
+For that reason I will skip the explaination of the ```call_vm_for_test_files```, 
+``call_vm_for_test_files`` and the ``run`` function. The same goes for the 
+parameterization decorator. Only difference is that the vm tester takes 
+three inputs. Further we have three additional tests one for ram space, one for an undefined 
+operation and one for an incorrect hexadecimal value.
+
+**Assumptions**
+
+The tests assume the assembler is correct. If the assembler were faulty we could 
+use the manually calculated "_man" files instead.
+
+**Files for the vm**
+
+Input files are located in the Assembly_Files directory manually calculated files in the 
+Test_Files/Vm directory. Output files will be saved to the Vm_Files Folder.
+
+### The assembly test files (/Assembly_Files)
+
+**Test1 to Test4**
+
+Those are the assembly codes I wrote to test the 11 basic operations.
+
+**test_key_error**
+
+Makes use of an undefined operation "pow".
+
+**test_ram**
+
+Allocates an illegal amount of ram for an array.
+
+### The vm test files (also in /Assembly_Files)
+
+**test1 to test4**
+
+Those are the hexcodes to test the 11 basic operations.
+
+**test_assert_error**
+
+Uses a hexcode for an undefined operation
+
+**test_false_hex**
+
+Uses a value that is not a valid hexstring
+
+**test_ram**
+
+Uses an invalid amount of ram
+
+### Test coverage
+
+For the test coverage I used the pytest configuration. I have defined 
+that in the ``.pytest.ini`` file.
+
+```
+[pytest]
+python_files =
+    *_test.py
+addopts = --cov assembler --cov vm
+```
+
+When running the ```pytest``` command in the CLI pytest automatically looks 
+for any file ending with ```_test.py```. For the coverage it uses the flag 
+```--cov Module_Name```. For some reason it is not possible to append two 
+files with the coverage flag. That is why I had to call the flag twice. now, When running the 
+command ```pytest``` in the CLI, pytest actually runs:
+
+```pytest --cov assembler --cov vm```
+
 ## Task 2
 
 ### Disassembler

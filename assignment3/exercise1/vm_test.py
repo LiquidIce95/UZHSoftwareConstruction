@@ -30,26 +30,25 @@ def run(case, input, output):
     call_vm_for_test_files(f"{input}.mx", f"{output}.txt")
     assert_equalitity_of_files(f"{output}.txt", f"{case}_man.txt")
 
-def test_1(case=f"{TEST_ROOT}test1", input=f"{A_ROOT}test1", output=f"{V_ROOT}test1"):
-    run(case, input, output)
+list_of_tests = [(f"{TEST_ROOT}test{i}", f"{A_ROOT}test{i}", f"{V_ROOT}test{i}") for i in range(1, 5)]
 
-def test_2(case=f"{TEST_ROOT}test2", input=f"{A_ROOT}test2", output=f"{V_ROOT}test2"):
-    run(case, input, output)
-
-def test_3(case=f"{TEST_ROOT}test3", input=f"{A_ROOT}test3", output=f"{V_ROOT}test3"):
-    run(case, input, output)
-
-def test_4(case=f"{TEST_ROOT}test4", input=f"{A_ROOT}test4", output=f"{V_ROOT}test4"):
+@pytest.mark.parametrize("case, input, output", list_of_tests)
+def tests(case, input, output):
     run(case, input, output)
 
 # These cases should raise errors
-def test_ram(case=f"{TEST_ROOT}test_ram", input=f"{A_ROOT}test_ram", output=f"{V_ROOT}test_ram"):
+def test_ram(case=f"{TEST_ROOT}test_ram_vm", input=f"{A_ROOT}test_ram_vm", output=f"{V_ROOT}test_ram_vm"):
     with pytest.raises(IndexError):
         run(case, input, output)
 
-def test_inf_error(case=f"{TEST_ROOT}test_inf_error", input=f"{A_ROOT}test_inf_error", output=f"{V_ROOT}test_inf_error"):
+def test_assert_error(case=f"{TEST_ROOT}test_assert_error_vm", input=f"{A_ROOT}test_assert_error_vm", output=f"{V_ROOT}test_assert_error_vm"):
     with pytest.raises(AssertionError):
+        run(case, input, output)
+
+def test_false_hex(case=f"{TEST_ROOT}test_false_hex_vm", input=f"{A_ROOT}test_false_hex_vm", output=f"{V_ROOT}test_false_hex_vm"):
+    with pytest.raises(ValueError):
         run(case, input, output)
 
 # What would the additional problem be if we don't know that the assembler is correct?
 # We could switch to the manually calculated test files
+# --do-not-trust-assembler should change the list to _man files

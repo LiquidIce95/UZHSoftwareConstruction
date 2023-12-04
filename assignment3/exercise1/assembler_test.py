@@ -28,19 +28,17 @@ def run(case, input):
     call_assembler_for_test_files(f"{input}.as", f"{input}.mx")
     assert_equalitity_of_files(f"{input}.mx", f"{case}_man.mx")
 
-def test_1(case=f"{TEST_ROOT}test1", input=f"{A_ROOT}test1"):
-    run(case, input)
+list_of_tests = [(f"{TEST_ROOT}test{i}", f"{A_ROOT}test{i}") for i in range(1,5)]
 
-def test_2(case=f"{TEST_ROOT}test2", input=f"{A_ROOT}test2"):
-    run(case, input)
-
-def test_3(case=f"{TEST_ROOT}test3", input=f"{A_ROOT}test3"):
-    run(case, input)
-
-def test_4(case=f"{TEST_ROOT}test4", input=f"{A_ROOT}test4"):
+@pytest.mark.parametrize("case, input", list_of_tests)
+def tests(case, input):
     run(case, input)
 
 # These cases should raise errors
-def test_inf_error(case=f"{TEST_ROOT}test_inf_error", input=f"{A_ROOT}test_inf_error"):
+def test_inf_error(case=f"{TEST_ROOT}test_key_error_man", input=f"{A_ROOT}test_key_error"):
     with pytest.raises(KeyError):
+        run(case, input)
+
+def test_ram_error(case=f"{TEST_ROOT}test_ram", input=f"{A_ROOT}test_ram"):
+    with pytest.raises(AssertionError):
         run(case, input)

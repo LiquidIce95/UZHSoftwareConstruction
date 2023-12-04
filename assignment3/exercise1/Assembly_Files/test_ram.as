@@ -19,4 +19,4 @@ sub R3 R0
 bne R3 @loop
 hlt
 .data
-array: 200
+array: 300
