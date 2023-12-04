@@ -131,6 +131,7 @@ command ```pytest``` in the CLI, pytest actually runs:
 
 ```pytest --cov assembler --cov vm```
 
+
 ## Task 2
 
 ### Disassembler
@@ -239,7 +240,7 @@ At the end the funciton formats the operation code and its arguemnts returns the
     return f"{as_op} {' '.join(args)}", op
 ```
 
-#### The inster_label function:
+#### The insert_label function:
 The insert_label function takes a list as input and modifies it in-place. We decided to do this given the clear link between the disassemble_file function and the inster_label function and to keep the code simple and cleaner, wothout the need to have multiple copies of the same object. In a larger more complex system, for example if the disassmbler would be part of a bigger construct, we might no have decided to do so depending of course on the context. 
 
 After initializing a counter, which is later used to add numbers to the labels, and a dictionary keeps track of which labels are used with which target line, the function iterates over the list containing the assembly code lines and the hexadecimal code.
@@ -278,7 +279,77 @@ We tought about other methods, such as creating a dictionary where we would add 
 ### Example input_file.mx
 
 ### Pytest file
-To
+To maximise the testing possibilities we modified the assembler.py file as well as the vm.py file. The changed them in a way that allows us to call them in the test_disassemble.py file. We added a main_for_tests funciton to both of them. 
+
+We added the io module to the vm.py file to us to capture the output of the virtual machine, without chaning any of the logic, to ensure that the ouputs are still correct and based on the logic created before. The main_for_test function in the vm.py file does creates an in-memory StringIO buffer and redirects the standard output to it,which allows the function to collect all output generated during the virtual machine's execution. The function opens the specified input file containing the program code, which is then processed and executed by the virtual machine. After running the program, the function retrieves the output from the StringIO buffer and restores the standard output to its original state. This captured output is then returned. 
+
+In the assembler.py file the main_for_tests functiono takes assembler_cls, input_path, and output_path as parameters. This allows the function to be more flexible and to be called with different inputs and outputs which is needed in the pytest file. 
+
+The test_dis_assemble.py file uses the modules import pytest os, which is used to setup files for tests and later teardown the test-setup, from contextlib it uses contextmanager, which is used for setup and teardown as well and finaly the test file uses python regular expression to, re, to modify the output captured by the StringIO buffer to allow us to compare the ouput of the vm. 
+
+In addition it of cours imports the vm, the disassember as well as the assembler. 
+
+#### Helper functions:
+##### The create_temp_input_file function:
+This function is a context manager for creating and using a temporary file with specified content. It creates a file, allows the calling code to use it within a with block, and ensures the file is deleted afterwards for cleanup.
+
+##### The opcodes_setup function:
+This function disassembles an input file, extracts opcodes from the resulting assembly code, deletes the temporary file, and returns the opcodes. As the names says it is used as a setup function for all the test, that test the correctness of the opcodes.
+
+##### The extract_opcodes function:
+This function reads a file and returns a list of the first word (opcode) from each line that is not a label definition.
+
+##### The labels_setup function:
+This function disassembles an input file, extracts label positions from the resulting assembly, deletes the temporary file, and returns the label positions. It is used as a setup fuction for all test trying to assess the correcntes of the labels and their positioningss.
+
+##### The extract_label_positions function:
+This function reads an assembly file and returns a list of line numbers where labels are defined and referenced.
+
+##### The extract_last_number function:
+This function parses a string, in this context, the ouput of the vm, to find and return the last number following the pattern '>> ', or None if no match is found.
+
+##### The run_vm function:
+This function runs the virtual machine on an input file, extracts the last number from its output, deletes the output file, and handles any file deletion errors.
+
+##### The final_outcome_set_up:
+his function assembles, disassembles, and then reassembles an input file, runs a virtual machine on the final output, deletes all intermediate files, and returns the last number from the VM's output. This function is used to assess if the output of the vm, of a file, that has gone through the disassembler is the same as before it was disassemnled.
+
+#### The tests:
+##### test_wrong_input_extension_correct_output_extension: 
+This tests that the disassembler raises an AssertionError when provided with an input file having the wrong extension (.txt) but the correct output file extension (.as).
+
+##### test_correct_input_extension_wrong_output_extension: 
+Here we check if an AssertionError is raised when the input file has the correct extension (.mx) but the output file has the wrong extension (.txt).
+
+##### test_wrong_input_output_extensions: 
+This Verifies that an AssertionError is raised when both input and output files have incorrect extensions, which is tested using .txt endings.
+
+##### test_non_hexadecimal_content: 
+In this Test we look for an AssertionError when the disassembler processes a file containing non-hexadecimal content, indicating a format mismatch.
+
+##### test_improperly_formatted_line_length: 
+This checks for an AssertionError when the input file contains lines of incorrect length, a format issue.
+
+##### test_improperly_formatted_line_space: 
+We test for an AssertionError when the input file contains improperly spaced content, again a format error.
+
+##### test_empty_file: 
+This test verifies that an AssertionError is raised when the input file is empty.
+
+##### test_wrong_opcode_to_low: 
+This checks if an AssertionError is raised for opcodes that are not supported by the disassmbler.
+
+##### test_wrong_opcode_to_high: 
+This test tests for an AssertionError when encountering opcodes that are not supported
+
+##### test_opcodes_comparisons: 
+Here we compare opcodes extracted from multiple .mx files with those from corresponding .as files to ensure they match. We have a control .as file which at the end is compared to the ouput .as file resulting from using the disassembler on a .mx file.
+
+##### test_label_comparisons: 
+This compares label positions extracted from multiple .mx files with those from corresponding .as files for consistency. The .as file is again the control and the .mx file is processed by the disassembler.
+
+##### test_final_outcomes: 
+This test checks if the final outcomes from running a virtual machine on multiple .mx files match the expected results set up by a specific setup function. The .mx is first run directly by the vm, to create a control values. The helper funciton then uses the disassmbler on the .mx file, then the assembler and then runs it thourgh the vm. 
 
 
 ## Task 3
