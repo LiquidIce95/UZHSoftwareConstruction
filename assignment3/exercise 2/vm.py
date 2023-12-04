@@ -91,9 +91,9 @@ class VirtualMachine:
     # [/run]
 
 def main_for_tests(vm_instance, input_path, output_path):
-    # Use StringIO to capture output
+    #using StringIO to capture output
     with io.StringIO() as buffer, open(input_path, "r") as reader:
-        # Redirect stdout to the buffer
+        #redirect stdout to the buffer
         old_stdout = sys.stdout
         sys.stdout = buffer
 
@@ -103,16 +103,11 @@ def main_for_tests(vm_instance, input_path, output_path):
             vm_instance.initialize(program)
             vm_instance.run()
 
-            # Get the contents of the buffer (captured output)
+            #get the contents of the buffer (captured output)
             captured_output = buffer.getvalue()
         finally:
-            # Restore original stdout
+            #restorinf the original stdout
             sys.stdout = old_stdout
-
-        # Write to the output file if necessary
-        if output_path != "-":
-            with open(output_path, "w") as writer:
-                writer.write(captured_output)
 
         # Return the captured output
         return captured_output
