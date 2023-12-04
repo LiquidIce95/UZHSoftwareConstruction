@@ -93,16 +93,6 @@ class VirtualMachine:
                 assert False, f"Unknown op {op}"
     # [/run]
 
-def main_test(vm_cls, file_input, file_output):
-    reader = open(file_input, "r")
-    writer = open(file_output, "w")
-    lines = [ln.strip() for ln in reader.readlines()]
-    program = [int(ln, 16) for ln in lines if ln]
-    vm = vm_cls()
-    vm.initialize(program)
-    vm.run()
-    vm.show(writer)
-
 def parse_hex_to_int(numbers):
     out = []
     for num in numbers:
@@ -121,6 +111,17 @@ def parse_hex_to_int(numbers):
                 tmp.append(n)
         out.append(int("".join(tmp)))
     return out
+
+def main_test(vm_cls, file_input, file_output):
+    reader = open(file_input, "r")
+    writer = open(file_output, "w")
+    lines = [ln.strip() for ln in reader.readlines()]
+    program = [str(int(ln, 16)) for ln in lines if ln]
+    program = parse_hex_to_int(program)
+    vm = vm_cls()
+    vm.initialize(program)
+    vm.run()
+    vm.show(writer)
 
 def main(vm_cls):
     assert len(sys.argv) == 3, f"Usage: {sys.argv[0]} input|- output|-"
