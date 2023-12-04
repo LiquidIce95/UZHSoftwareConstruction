@@ -240,7 +240,7 @@ At the end the funciton formats the operation code and its arguemnts returns the
     return f"{as_op} {' '.join(args)}", op
 ```
 
-#### The insert_label function:
+#### The inster_label function:
 The insert_label function takes a list as input and modifies it in-place. We decided to do this given the clear link between the disassemble_file function and the inster_label function and to keep the code simple and cleaner, wothout the need to have multiple copies of the same object. In a larger more complex system, for example if the disassmbler would be part of a bigger construct, we might no have decided to do so depending of course on the context. 
 
 After initializing a counter, which is later used to add numbers to the labels, and a dictionary keeps track of which labels are used with which target line, the function iterates over the list containing the assembly code lines and the hexadecimal code.
@@ -282,10 +282,44 @@ We tought about other methods, such as creating a dictionary where we would add 
 To maximise the testing possibilities we modified the assembler.py file as well as the vm.py file. The changed them in a way that allows us to call them in the test_disassemble.py file. We added a main_for_tests funciton to both of them. 
 
 We added the io module to the vm.py file to us to capture the output of the virtual machine, without chaning any of the logic, to ensure that the ouputs are still correct and based on the logic created before. The main_for_test function in the vm.py file does creates an in-memory StringIO buffer and redirects the standard output to it,which allows the function to collect all output generated during the virtual machine's execution. The function opens the specified input file containing the program code, which is then processed and executed by the virtual machine. After running the program, the function retrieves the output from the StringIO buffer and restores the standard output to its original state. This captured output is then returned. 
+```python
+    with io.StringIO() as buffer, open(input_path, "r") as reader:
+        old_stdout = sys.stdout
+        sys.stdout = buffer
+
+        try:
+            lines = [ln.strip() for ln in reader.readlines()]
+
+            ...
+
+            captured_output = buffer.getvalue()
+        finally:
+            sys.stdout = old_stdout
+
+        return captured_output
+```
 
 In the assembler.py file the main_for_tests functiono takes assembler_cls, input_path, and output_path as parameters. This allows the function to be more flexible and to be called with different inputs and outputs which is needed in the pytest file. 
 
-The test_dis_assemble.py file uses the modules import pytest os, which is used to setup files for tests and later teardown the test-setup, from contextlib it uses contextmanager, which is used for setup and teardown as well and finaly the test file uses python regular expression to, re, to modify the output captured by the StringIO buffer to allow us to compare the ouput of the vm. 
+The test_dis_assemble.py file uses the modules import pytest os, which is used to setup files for tests and later teardown the test-setup, for example here:
+```python
+    def opcodes_setup(input_file):
+        disassemble.main_for_tests([input_file, "temp.as"])
+        results = extract_opcodes("temp.as")
+        os.remove("temp.as")
+        return results
+```
+
+from contextlib it uses contextmanager, which is used for setup and teardown as well as can be seen here:
+```python
+    @contextmanager
+    def create_temp_input_file(content):
+```
+
+and finaly the test file uses python regular expression to, re, to modify the output captured by the StringIO buffer to allow us to compare the ouput of the vm:
+```python
+matches = re.findall(r'>> (\d+)', output)
+```
 
 In addition it of cours imports the vm, the disassember as well as the assembler. 
 
@@ -350,6 +384,8 @@ This compares label positions extracted from multiple .mx files with those from 
 
 ##### test_final_outcomes: 
 This test checks if the final outcomes from running a virtual machine on multiple .mx files match the expected results set up by a specific setup function. The .mx is first run directly by the vm, to create a control values. The helper funciton then uses the disassmbler on the .mx file, then the assembler and then runs it thourgh the vm. 
+
+The tests can be started with the terminal command pytest when executing it from the exercise 2 subfolder. 
 
 
 ## Task 3
