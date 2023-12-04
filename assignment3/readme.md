@@ -277,6 +277,9 @@ This very simple approach creates a lable, when ever there is a branching opeart
 We tought about other methods, such as creating a dictionary where we would add values that would indicate an array, or a label that indicated a data structure But this would defeat the simplcity of the disassembler. Another method we thought of was to keep track of the number of times a particular memory address was referenced, and then add labels based on a certain threshold. But this would only be a heuristic approach and would most likely not lead to a satisfactory result. Thus we decided against the adding of support for arrays.
 
 ### Example input_file.mx
+The example input_file.mx contains the code that describes a programm, that first assigns R0 to 0, then R1 to 22 and R3 to 2. Then it creates a loop and increases R0 until it strores the number 22. Then it adds 22 to 22 resulting in 44 being stored in R0, and later 2 is subtracted from 44 resulting in the final output of 42, the answer to the ultimate question of fife, the universe, and everything. 
+
+If the file is disassembled, the result shows that the disassembler create a lables L001, and thus a loop, at the position required.
 
 ### Pytest file
 To maximise the testing possibilities we modified the assembler.py file as well as the vm.py file. The changed them in a way that allows us to call them in the test_disassemble.py file. We added a main_for_tests funciton to both of them. 
