@@ -1,3 +1,151 @@
+## Task 2
+
+### Disassembler
+#### The disassemble_file function:
+The global variables in the disassemle.py file are:
+```python
+OPS = {
+    0x1: "hlt --",
+    0x2: "ldc rv",
+    0x3: "ldr rr",
+    0x4: "cpy rr",
+    0x5: "str rr",
+    0x6: "add rr",
+    0x7: "sub rr",
+    0x8: "beq rv",
+    0x9: "bne rv",
+    0xA: "prr r-",
+    0xB: "prm r-",
+    0xC: "inc r-",
+    0xD: "dec r-",
+    0xE: "swp rr"
+}
+
+OP_MASK = 0xFF
+OP_SHIFT = 8
+BRANCH_OPS = {0x8, 0x9}
+```
+
+OPS is of course a dictionary that maps the hexadecimal code to the, in the lecture assigned, operaitons and their argument format. OP_MASK is later used to assing the bits to their funcitonality, as well as OP_SHIFT and BRANCH_OPS are finaly used to input the labels.
+
+As required the disassembler works by using the following command:
+```
+python disassemble.py input_file.mx output_file.as
+```
+
+But we have added two different main functions so that the code can not only be called from the command line, a funcitonality added by the main funciton using the sys module to enable command line support, but also from another programm, in our case the test_disassemble.py file. This funcitonality is handled by the main_for_tests function. 
+
+Both functions first check if the diassembler is given the correect input. Meaning if the disassemble.py file received an input in the mx format and an output file in the as format.
+
+In case of the main():
+```python
+    assert len(sys.argv) == 3, "Usage: python disassemble.py input_file.mx output_file.as"
+    assert sys.argv[1][-3:] == ".mx" and sys.argv[2][-3:] == ".as", "Input has to be a .mx file, Output has to be a .as file"
+```
+
+And in the main_for_tests():
+```python
+    assert len(files) == 2, "Usage: ['input_file.mx', output_file.as]"
+    assert files[0].endswith(".mx") and files[1].endswith(".as"), "Input has to be a .mx file, Output has to be a .as file"
+```
+
+After this they both call the disassemble_file function which takes the input and output file as input. This function starts by reading the given mx file and then tests if the provided file is empty. If it is the funciton throws an AssertionError telling its user "File is empty". 
+We decided to do this, because there is no reason to disassemble a empty file, given the output would of course be also empty, but more important we thought that an empty output file could lead to the user, if he did by mistake input an empty file, to look for bugs or mistakes in other parts of their code, which would be another one of those debugging sessions that could have been prevented if the simnple mistake was found. By simply thorwing an error when using it like this we prevent this scenario. 
+
+When having passed this test, we have to reset the reader to the first line, which we do by using the seek() function:
+```python
+    in_file.seek(0)
+```
+
+Then, while iterating over the lines of the inpput file, we test if the lines fit the expected format, meaning six characters in hexadecimal. We use the match() function, from the regular expression module after having striped the line with line.strip() function. We do not remove any whitespace between the characters given that this would be a wrong format any way.
+```python
+    re.match(r"^[0-9A-Fa-f]{6}$", line.strip())
+```
+
+The regular expression pattern we are matching the lines against, allows them to pass if they contain 6 characters, which can be a number from 0 to 9 or a letter, either in upper or lower case from A-F, the hexadecimal format. 
+
+Then we append the result of the call to the disassemble_instruction function to, a at the beginning initiated, list:
+```python
+    as_lines.append(disassemble_instruction(int(line.strip(), 16)))
+```
+
+When all lines have been processed, the pass them on to the insert_labels function which adds labels to the assembly code and then att the end we iterate over all the lines and write them into the ouput file:
+```python
+    with open(output_file, 'w') as out_file:
+        out_file.write("".join(line + "\n" for line, _ in as_lines))
+```
+
+We simply concatinate the line of assembly code with an "\n" and then the ouput file is done. 
+
+#### The disassemble_instruction function:
+The disassembly of the instructions starts with the same bit-wise operation so assign the correct parameters to their corresponding labels, as seen in the vm.py file.
+```python
+    op = instruction & OP_MASK
+    instruction >>= OP_SHIFT
+    arg0 = instruction & OP_MASK
+    instruction >>= OP_SHIFT
+    arg1 = instruction & OP_MASK
+```
+
+After this the function checks if the operation which the user wants to perform is a recognised one, by checking if the hex code is in the OPS dictionary. If not, the funciton throws an AssertionError and informs the user about the error made. 
+
+If the above test is passed, the funciton gets the operation code and its argument structure from the OPS dictionary and splits them up accordingly. After this a list is initialized that will hold the arguments of the mx code which are at the end used to construct the assembly code.
+
+In section after the list is initialized we determin what registers or values the mx code contained and append the arguments list with the string version of them:
+```python 
+    if 'r' in fmt:
+        args.append(f"R{arg0}")
+    if 'r' in fmt[1:]:
+        args.append(f"R{arg1}")
+    elif 'v' in fmt:
+        args.append(str(arg1))
+```
+
+At the end the funciton formats the operation code and its arguemnts returns them with the hex_code of the operaiton, which will be needed in the labeling process. 
+```python
+    return f"{as_op} {' '.join(args)}", op
+```
+
+#### The inster_label function:
+The insert_label function takes a list as input and modifies it in-place. We decided to do this given the clear link between the disassemble_file function and the inster_label function and to keep the code simple and cleaner, wothout the need to have multiple copies of the same object. In a larger more complex system, for example if the disassmbler would be part of a bigger construct, we might no have decided to do so depending of course on the context. 
+
+After initializing a counter, which is later used to add numbers to the labels, and a dictionary keeps track of which labels are used with which target line, the function iterates over the list containing the assembly code lines and the hexadecimal code.
+
+If the hexadecimal code is mapped to a branching operation, the funciton will add a label to the assembly code.
+```pyhton
+    for i, (line, op) in enumerate(as_lines):
+        if op in BRANCH_OPS:
+```
+
+First the the targeted line is extracted and then mapped to a default lable, if there does not already exist, which is then stored in the label_map dictionary. If the label was new the labal count is incremented by one.
+```pyhton
+    target_line = int(line.split()[-1])
+    label = label_map.setdefault(target_line, f"L{label_count:03d}")
+    if label == f"L{label_count:03d}":
+        label_count += 1
+```
+
+Then the target line number, where the branch points to, in the assembly code is replaced with the @L00X label and then the line is updated in the in list with the assembly code lines.
+```pyhton
+    line_parts = line.split()
+    line_parts[-1] = f"@{label}"
+    line = ' '.join(line_parts)
+```
+
+At the end the function all the lines are iterated over again to add the L00X: labels, which are placed where the target lines pointed to.
+```python
+ for target_line, label in label_map.items():
+    as_lines[target_line] = (f"{label}:\n{as_lines[target_line][0]}", None)
+```
+
+This very simple approach creates a lable, when ever there is a branching opeartion in the mx code. This is the only way we see this work, given the .mx file does not contain any context about where to put labels and where not. This is the same reason we did not add support for arrays, given that it would have created an @array label with every ldc operation in the resulting assembly code. 
+
+We tought about other methods, such as creating a dictionary where we would add values that would indicate an array, or a label that indicated a data structure But this would defeat the simplcity of the disassembler. Another method we thought of was to keep track of the number of times a particular memory address was referenced, and then add labels based on a certain threshold. But this would only be a heuristic approach and would most likely not lead to a satisfactory result. Thus we decided against the adding of support for arrays.
+
+### Example input_file.mx
+
+### Pytest file
+To
 
 
 ## Task 3
