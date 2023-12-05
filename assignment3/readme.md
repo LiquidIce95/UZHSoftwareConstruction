@@ -131,6 +131,12 @@ command ```pytest``` in the CLI, pytest actually runs:
 
 ```pytest --cov assembler --cov vm```
 
+**Coverage percentage**
+
+When running the coverage test it does not run to a 100%. A large part of this is due to the 
+``main(*_cls)`` function. I do not have a test that runs the vm or assembler from the CLI. 
+That means the only thing that could go wrong in my test is if the ```sys.argv``` library fails 
+or the code crashes from the commandline.
 
 ## Task 2
 
